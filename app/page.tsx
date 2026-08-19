@@ -25,6 +25,14 @@ type Ecosystem = {
   icon: string;
 };
 
+type Operation = {
+  name: string;
+  description: string;
+  inputLabel: string;
+  inputPlaceholder: string;
+  connector: string;
+};
+
 const menu = [
   ["▦", "Centro de control"],
   ["◫", "Ecosistemas"],
@@ -42,6 +50,46 @@ const ecosystems: Ecosystem[] = [
   { name: "Infraestructura académica", short: "Infraestructura", description: "Aulas, aforos, modalidad, equipos y atención de incidencias.", automations: 5, success: "89.3%", owner: "Carlos Medina", updated: "Ayer", tone: "violet", icon: "IA" },
   { name: "Comunicaciones y encuestas", short: "Comunicaciones", description: "Correos, recordatorios, encuestas y seguimiento de respuestas.", automations: 9, success: "93.6%", owner: "Valeria León", updated: "Ayer", tone: "slate", icon: "CE" },
 ];
+
+const ecosystemOperations: Record<string, Operation[]> = {
+  "Titulación y grados": [
+    { name: "Generar acta de sustentación", description: "Crea el acta desde el consolidado validado y prepara el folio para firma.", inputLabel: "Código de grupo o expediente", inputPlaceholder: "Ej. AM-01 o 1373-2026-T", connector: "Excel + Word/PDF" },
+    { name: "Validar consolidado de grupos", description: "Comprueba alumnos, jurados, horario y modalidad antes de continuar.", inputLabel: "Archivo o lote a validar", inputPlaceholder: "Ej. Consolidado agosto 2026", connector: "Excel + Sistema académico" },
+    { name: "Asignar jurados", description: "Cruza especialidad, disponibilidad y carga para proponer una terna.", inputLabel: "Programa o grupo", inputPlaceholder: "Ej. MBA G-04", connector: "Sistema académico + Correo" },
+    { name: "Verificar horario de sustentación", description: "Detecta cruces entre el acta, el horario general y la reserva de aula.", inputLabel: "Grupo de sustentación", inputPlaceholder: "Ej. ADM-MKT G-01", connector: "Excel + Calendario" },
+    { name: "Cerrar expediente", description: "Reúne acta, firmas y evidencias, y archiva el expediente completo.", inputLabel: "Número de expediente", inputPlaceholder: "Ej. 1373-2026-T", connector: "Word/PDF + Repositorio" },
+  ],
+  "Programación académica": [
+    { name: "Detectar cruces de horario", description: "Compara secciones, docentes y ambientes para identificar conflictos.", inputLabel: "Periodo académico", inputPlaceholder: "Ej. 2026-2", connector: "Excel + Sistema académico" },
+    { name: "Construir propuesta de horario", description: "Genera una primera distribución según disponibilidad y reglas académicas.", inputLabel: "Programa y periodo", inputPlaceholder: "Ej. MBA 2026-2", connector: "Sistema académico" },
+    { name: "Reservar aulas", description: "Asigna ambientes según capacidad, modalidad y equipamiento requerido.", inputLabel: "Bloque o sección", inputPlaceholder: "Ej. Bloque nocturno", connector: "Infraestructura + Calendario" },
+    { name: "Publicar programación", description: "Distribuye la versión aprobada y conserva la evidencia de publicación.", inputLabel: "Versión aprobada", inputPlaceholder: "Ej. Programación v4", connector: "Correo + Repositorio" },
+  ],
+  "Gestión docente": [
+    { name: "Validar disponibilidad docente", description: "Consolida disponibilidad y alerta incompatibilidades con la carga asignada.", inputLabel: "Docente o periodo", inputPlaceholder: "Ej. 2026-2", connector: "Formularios + Excel" },
+    { name: "Preparar contrato docente", description: "Completa el documento contractual con los datos y la carga aprobada.", inputLabel: "Código de docente", inputPlaceholder: "Ej. DOC-0241", connector: "Sistema académico + Word/PDF" },
+    { name: "Enviar evaluación", description: "Programa y distribuye la evaluación docente a los grupos correspondientes.", inputLabel: "Curso o bloque", inputPlaceholder: "Ej. Finanzas corporativas", connector: "Formularios + Correo" },
+    { name: "Actualizar carga académica", description: "Sincroniza cambios aprobados y genera un registro de diferencias.", inputLabel: "Periodo académico", inputPlaceholder: "Ej. 2026-2", connector: "Excel + Sistema académico" },
+  ],
+  "Asesores y jurados": [
+    { name: "Asignar asesor", description: "Propone asignaciones según línea de investigación y disponibilidad.", inputLabel: "Lote de alumnos", inputPlaceholder: "Ej. MBA agosto 2026", connector: "Excel + Sistema académico" },
+    { name: "Validar datos de asignación", description: "Detecta duplicados, omisiones y conflictos antes de publicar.", inputLabel: "Archivo de asignaciones", inputPlaceholder: "Ej. Asesores v3", connector: "Excel" },
+    { name: "Generar conformidad", description: "Crea la constancia de conformidad con los datos del proceso.", inputLabel: "Código de asesoría", inputPlaceholder: "Ej. ASE-2026-018", connector: "Word/PDF + Repositorio" },
+    { name: "Preparar planilla de pagos", description: "Consolida hitos aprobados y calcula el lote para revisión administrativa.", inputLabel: "Periodo de pago", inputPlaceholder: "Ej. Agosto 2026", connector: "Excel + Repositorio" },
+  ],
+  "Infraestructura académica": [
+    { name: "Buscar aula disponible", description: "Filtra ambientes por fecha, aforo, sede y equipamiento.", inputLabel: "Fecha y bloque", inputPlaceholder: "Ej. 25/08/2026 · 19:00", connector: "Calendario + Infraestructura" },
+    { name: "Validar modalidad y aforo", description: "Comprueba que el ambiente cumpla la modalidad y capacidad del grupo.", inputLabel: "Sección o evento", inputPlaceholder: "Ej. MBA G-04", connector: "Sistema académico" },
+    { name: "Reservar equipo", description: "Solicita y registra los recursos audiovisuales requeridos.", inputLabel: "Aula o evento", inputPlaceholder: "Ej. Aula H-302", connector: "Infraestructura + Correo" },
+    { name: "Registrar incidencia", description: "Crea el caso, notifica al responsable y conserva el seguimiento.", inputLabel: "Ambiente afectado", inputPlaceholder: "Ej. Aula H-302", connector: "Formularios + Correo" },
+  ],
+  "Comunicaciones y encuestas": [
+    { name: "Enviar convocatoria", description: "Prepara destinatarios, personaliza el mensaje y registra los envíos.", inputLabel: "Campaña o audiencia", inputPlaceholder: "Ej. Jurados agosto 2026", connector: "Correo + Sistema académico" },
+    { name: "Programar recordatorio", description: "Agenda seguimientos automáticos según fecha y estado de respuesta.", inputLabel: "Proceso o fecha límite", inputPlaceholder: "Ej. Firma de actas · 28/08", connector: "Correo + Calendario" },
+    { name: "Lanzar encuesta", description: "Publica el formulario y distribuye un enlace trazable a la audiencia.", inputLabel: "Nombre de encuesta", inputPlaceholder: "Ej. Experiencia de sustentación", connector: "Formularios + Correo" },
+    { name: "Consolidar respuestas", description: "Agrupa resultados, identifica pendientes y produce un resumen operativo.", inputLabel: "Encuesta a consolidar", inputPlaceholder: "Ej. Encuesta posterior agosto", connector: "Formularios + Excel" },
+  ],
+};
 
 const seedAutomations: Automation[] = [
   { id: 1, name: "Generar acta de sustentación", ecosystem: "Titulación y grados", owner: "Ingrid Zárate", trigger: "Nuevo grupo validado", status: "Activa", success: "99.2%", lastRun: "Hace 4 min" },
@@ -93,6 +141,7 @@ export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [selectedEcosystem, setSelectedEcosystem] = useState<Ecosystem | null>(null);
+  const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
@@ -114,7 +163,7 @@ export default function Home() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { setModalOpen(false); setSelectedEcosystem(null); setNotificationsOpen(false); }
+      if (event.key === "Escape") { setModalOpen(false); setSelectedOperation(null); setNotificationsOpen(false); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -129,9 +178,28 @@ export default function Home() {
 
   const navigate = (label: string) => {
     setActive(label);
+    setSelectedEcosystem(null);
+    setSelectedOperation(null);
     setQuery("");
     setNotificationsOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const openEcosystem = (item: Ecosystem) => {
+    setActive("Ecosistemas");
+    setSelectedEcosystem(item);
+    setSelectedOperation(null);
+    setNotificationsOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const executeOperation = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedOperation) return;
+    const form = new FormData(event.currentTarget);
+    const context = String(form.get("context") || "lote seleccionado");
+    showToast(`Ejecución iniciada: ${selectedOperation.name} · ${context}`);
+    setSelectedOperation(null);
   };
 
   const toggleAutomation = (id: number) => {
@@ -185,8 +253,8 @@ export default function Home() {
         <header className="topbar">
           <div>
             <p className="eyebrow">ENTORNO PILOTO · MIÉRCOLES, 19 DE AGOSTO</p>
-            <h1>{sectionCopy[active][0]}</h1>
-            <p>{sectionCopy[active][1]}</p>
+            <h1>{selectedEcosystem && active === "Ecosistemas" ? selectedEcosystem.name : sectionCopy[active][0]}</h1>
+            <p>{selectedEcosystem && active === "Ecosistemas" ? "Selecciona una automatización, completa su contexto y ejecútala desde este ecosistema." : sectionCopy[active][1]}</p>
           </div>
           <div className="top-actions">
             <div className="notification-wrap">
@@ -200,10 +268,12 @@ export default function Home() {
 
         {active === "Centro de control" && <Dashboard
           onNavigate={navigate}
-          onOpenEcosystem={(item) => { setSelectedEcosystem(item); setActive("Ecosistemas"); }}
+          onOpenEcosystem={openEcosystem}
           onReview={() => showToast("Caso AM-01 enviado a revisión")}
         />}
-        {active === "Ecosistemas" && <EcosystemsView onSelect={setSelectedEcosystem} />}
+        {active === "Ecosistemas" && (selectedEcosystem
+          ? <EcosystemWorkspace item={selectedEcosystem} onBack={() => setSelectedEcosystem(null)} onRun={setSelectedOperation} />
+          : <EcosystemsView onSelect={openEcosystem} />)}
         {active === "Automatizaciones" && <AutomationsView
           items={filteredAutomations} query={query} filter={filter}
           onQuery={setQuery} onFilter={setFilter} onToggle={toggleAutomation}
@@ -214,7 +284,7 @@ export default function Home() {
         {active === "Conectores" && <ConnectorsView onCheck={(name) => showToast(`Verificación iniciada: ${name}`)} />}
       </section>
 
-      {selectedEcosystem && <EcosystemDrawer item={selectedEcosystem} onClose={() => setSelectedEcosystem(null)} onNavigate={() => { setSelectedEcosystem(null); navigate("Automatizaciones"); setQuery(selectedEcosystem.short); }} />}
+      {selectedOperation && selectedEcosystem && <OperationRunner operation={selectedOperation} ecosystem={selectedEcosystem} onClose={() => setSelectedOperation(null)} onSubmit={executeOperation} />}
       {modalOpen && <NewAutomationModal onClose={() => setModalOpen(false)} onSubmit={createAutomation} />}
       {toast && <div className="toast" role="status"><span>✓</span>{toast}</div>}
     </main>
@@ -270,13 +340,37 @@ function Dashboard({ onNavigate, onOpenEcosystem, onReview }: {
 
 function EcosystemsView({ onSelect }: { onSelect: (item: Ecosystem) => void }) {
   return <section className="section-block flush">
-    <div className="view-toolbar"><div><span className="status live"><i />12 activos</span><span className="status neutral">2 en diseño</span></div><button className="secondary-button">＋ Nuevo ecosistema</button></div>
+    <div className="ecosystem-intro"><div><p className="eyebrow">PUERTAS DE ENTRADA</p><h2>Elige el tema que deseas automatizar</h2><p>Cada nombre te lleva a su espacio de trabajo con las acciones, datos y conectores correspondientes.</p></div><span className="status live"><i />6 ecosistemas disponibles</span></div>
     <div className="ecosystem-card-grid">{ecosystems.map((item) => <article className="ecosystem-card" key={item.name}>
       <div className="card-top"><span className={`ecosystem-icon ${item.tone}`}>{item.icon}</span><span className="status live"><i />Operativo</span></div>
-      <h2>{item.name}</h2><p>{item.description}</p>
+      <button className="ecosystem-name-button" onClick={() => onSelect(item)}><span>{item.name}</span><b aria-hidden="true">→</b></button><p>{item.description}</p>
       <div className="card-stats"><span><strong>{item.automations}</strong><small>automatizaciones</small></span><span><strong>{item.success}</strong><small>tasa de éxito</small></span></div>
-      <div className="card-owner"><span>{item.owner.split(" ").map((part) => part[0]).slice(0,2).join("")}</span><p><strong>{item.owner}</strong><small>Actualizado {item.updated.toLowerCase()}</small></p><button onClick={() => onSelect(item)} aria-label={`Ver ${item.name}`}>→</button></div>
+      <div className="card-owner"><span>{item.owner.split(" ").map((part) => part[0]).slice(0,2).join("")}</span><p><strong>{item.owner}</strong><small>Actualizado {item.updated.toLowerCase()}</small></p><button onClick={() => onSelect(item)} aria-label={`Entrar a ${item.name}`}>Entrar</button></div>
     </article>)}</div>
+  </section>;
+}
+
+function EcosystemWorkspace({ item, onBack, onRun }: { item: Ecosystem; onBack: () => void; onRun: (operation: Operation) => void }) {
+  const operations = ecosystemOperations[item.name] ?? [];
+  const recent = executions.filter((execution) => execution.ecosystem === item.name);
+  return <section className="ecosystem-workspace">
+    <button className="breadcrumb-button" onClick={onBack}>← Todos los ecosistemas</button>
+    <div className="workspace-hero">
+      <div className="workspace-identity"><span className={`ecosystem-icon large ${item.tone}`}>{item.icon}</span><div><p className="eyebrow">ESPACIO OPERATIVO</p><h2>{item.name}</h2><p>{item.description}</p></div></div>
+      <div className="workspace-kpis"><span><strong>{operations.length}</strong><small>acciones disponibles</small></span><span><strong>{item.success}</strong><small>tasa de éxito</small></span><span><strong>{item.owner}</strong><small>responsable</small></span></div>
+    </div>
+
+    <div className="workspace-heading"><div><p className="eyebrow">AUTOMATIZACIONES DEL ECOSISTEMA</p><h2>¿Qué necesitas hacer?</h2></div><span>Selecciona una acción para configurar su ejecución.</span></div>
+    <div className="operation-grid">{operations.map((operation, index) => <button className="operation-button" onClick={() => onRun(operation)} key={operation.name}>
+      <span className="operation-number">{String(index + 1).padStart(2, "0")}</span>
+      <span className="operation-copy"><strong>{operation.name}</strong><small>{operation.description}</small><i>{operation.connector}</i></span>
+      <b aria-hidden="true">Configurar y ejecutar →</b>
+    </button>)}</div>
+
+    <div className="workspace-lower-grid">
+      <section className="workspace-panel"><div className="workspace-panel-title"><div><p className="eyebrow">CONTROL</p><h3>Cómo se ejecuta</h3></div><span className="status live"><i />Trazable</span></div><ol className="workspace-steps"><li><span>1</span><div><strong>Indica el contexto</strong><p>Grupo, expediente, periodo o archivo sobre el que trabajarás.</p></div></li><li><span>2</span><div><strong>Valida antes de procesar</strong><p>El flujo comprueba datos y muestra alertas antes de producir resultados.</p></div></li><li><span>3</span><div><strong>Conserva la evidencia</strong><p>Cada resultado registra responsable, fecha, estado y documentos asociados.</p></div></li></ol></section>
+      <section className="workspace-panel"><div className="workspace-panel-title"><div><p className="eyebrow">ACTIVIDAD</p><h3>Ejecuciones recientes</h3></div></div>{recent.length > 0 ? recent.map((execution) => <div className="workspace-activity" key={execution.name}><span className={execution.status === "Completada" ? "ok" : "running"}>{execution.status === "Completada" ? "✓" : "↻"}</span><div><strong>{execution.name}</strong><p>{execution.detail}</p><small>{execution.time}</small></div></div>) : <div className="workspace-empty"><span>◌</span><strong>Sin ejecuciones abiertas</strong><p>La próxima automatización aparecerá aquí.</p></div>}</section>
+    </div>
   </section>;
 }
 
@@ -316,8 +410,8 @@ function ConnectorsView({ onCheck }: { onCheck: (name: string) => void }) {
   return <section className="section-block flush"><div className="connector-banner"><div><span>⌁</span><div><strong>Arquitectura conectada</strong><p>Cada intercambio conserva responsable, fecha, resultado y evidencia.</p></div></div><span className="status live"><i />5 servicios operativos</span></div><div className="connector-list">{connectors.map(([icon,name,description,status,lastSync]) => <article key={name}><span className="connector-icon">{icon}</span><div className="connector-copy"><strong>{name}</strong><p>{description}</p></div><div className="connector-health"><span className={`state-pill ${status === "Conectado" ? "activa" : status === "Atención" ? "pausada" : "borrador"}`}>{status}</span><small>{lastSync}</small></div><button onClick={() => onCheck(name)}>{status === "Planificado" ? "Configurar" : "Verificar"}</button></article>)}</div></section>;
 }
 
-function EcosystemDrawer({ item, onClose, onNavigate }: { item: Ecosystem; onClose: () => void; onNavigate: () => void }) {
-  return <div className="overlay" role="presentation" onMouseDown={(e) => { if (e.currentTarget === e.target) onClose(); }}><aside className="drawer" role="dialog" aria-modal="true" aria-label={`Detalle de ${item.name}`}><button className="close-button" onClick={onClose} aria-label="Cerrar">×</button><span className={`ecosystem-icon large ${item.tone}`}>{item.icon}</span><p className="eyebrow">ECOSISTEMA</p><h2>{item.name}</h2><p className="drawer-description">{item.description}</p><div className="drawer-kpis"><span><strong>{item.automations}</strong><small>Automatizaciones</small></span><span><strong>{item.success}</strong><small>Tasa de éxito</small></span></div><h3>Flujo de gobierno</h3><ol className="governance-list"><li><span>1</span><div><strong>Fuentes controladas</strong><p>Consolidados, formularios y registros maestros.</p></div></li><li><span>2</span><div><strong>Reglas y validaciones</strong><p>Alertas antes de generar documentos o mensajes.</p></div></li><li><span>3</span><div><strong>Evidencia y cierre</strong><p>Resultado archivado con trazabilidad completa.</p></div></li></ol><div className="drawer-owner"><span>{item.owner.split(" ").map((p) => p[0]).slice(0,2).join("")}</span><div><small>Responsable del ecosistema</small><strong>{item.owner}</strong></div></div><button className="primary-button wide" onClick={onNavigate}>Ver automatizaciones</button></aside></div>;
+function OperationRunner({ operation, ecosystem, onClose, onSubmit }: { operation: Operation; ecosystem: Ecosystem; onClose: () => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
+  return <div className="overlay modal-overlay" role="presentation" onMouseDown={(e) => { if (e.currentTarget === e.target) onClose(); }}><section className="modal runner-modal" role="dialog" aria-modal="true" aria-labelledby="runner-title"><button className="close-button" onClick={onClose} aria-label="Cerrar">×</button><div className="runner-heading"><span className={`ecosystem-icon ${ecosystem.tone}`}>{ecosystem.icon}</span><div><p className="eyebrow">{ecosystem.name}</p><h2 id="runner-title">{operation.name}</h2></div></div><p>{operation.description}</p><form onSubmit={onSubmit}><label>{operation.inputLabel}<input name="context" required placeholder={operation.inputPlaceholder} autoFocus /></label><div className="runner-route"><div><span>01</span><strong>Recibir datos</strong><small>Contexto indicado</small></div><b>→</b><div><span>02</span><strong>Validar</strong><small>Reglas del VRA</small></div><b>→</b><div><span>03</span><strong>Generar</strong><small>Resultado y evidencia</small></div></div><div className="runner-connector"><span>⌁</span><div><small>Conectores previstos</small><strong>{operation.connector}</strong></div><i className="status live"><i />Disponibles</i></div><div className="modal-note"><span>i</span><p>Esta ejecución piloto simula el inicio del flujo. La integración productiva utilizará los permisos y fuentes institucionales configurados.</p></div><div className="modal-actions"><button type="button" onClick={onClose}>Cancelar</button><button type="submit" className="primary-button">▷ Ejecutar automatización</button></div></form></section></div>;
 }
 
 function NewAutomationModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
