@@ -18,8 +18,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3000";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const image = `${protocol}://${host}/og.png`;
-  const title = "Automatizaciones para el VRA";
-  const description = "Centro de control para los ecosistemas de automatización del Vicerrectorado Académico.";
+  const title = "Automatizaciones del VRA";
+  const description = "Portal de acceso a las automatizaciones del Vicerrectorado Académico de la Universidad ESAN.";
 
   return {
     title,
