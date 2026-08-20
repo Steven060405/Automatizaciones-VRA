@@ -386,3 +386,43 @@ button { font: inherit; }
   .modal-actions button { width: 100%; }
   .workspace-footer { align-items: flex-start; flex-direction: column; gap: 12px; }
 }
+
+/* Acceso inicial */
+.login-page { min-height: 100vh; overflow: hidden; position: relative; display: grid; place-items: center; padding: 24px; background: linear-gradient(145deg,#f7f4f1 0%,#fbfbfa 50%,#eef2f3 100%); }
+.login-glow { position: absolute; border-radius: 50%; pointer-events: none; }
+.login-glow-one { width: 520px; height: 520px; right: -180px; top: -220px; background: radial-gradient(circle,rgba(160,25,49,.16),rgba(160,25,49,0) 70%); }
+.login-glow-two { width: 430px; height: 430px; left: -190px; bottom: -210px; background: radial-gradient(circle,rgba(28,53,67,.14),rgba(28,53,67,0) 70%); }
+.login-card { position: relative; z-index: 1; width: min(440px,100%); padding: 35px; border: 1px solid rgba(39,58,68,.1); border-radius: 22px; background: rgba(255,255,255,.93); box-shadow: 0 25px 70px rgba(24,39,48,.13); }
+.login-brand { display: flex; align-items: center; gap: 11px; padding-bottom: 24px; border-bottom: 1px solid #e8ecee; }
+.login-brand > span { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; background: #a01931; color: white; font-size: 19px; font-weight: 850; box-shadow: 0 9px 24px rgba(160,25,49,.2); }
+.login-brand strong,.login-brand small { display: block; }
+.login-brand strong { font-size: 11px; }
+.login-brand small { margin-top: 3px; color: #8a969c; font-size: 8px; }
+.login-heading { padding: 27px 0 22px; }
+.login-heading > p { margin: 0 0 8px; color: #a01931; font-size: 8px; font-weight: 850; letter-spacing: 1.4px; }
+.login-heading h1 { margin: 0 0 10px; color: #172630; font-size: 28px; line-height: 1.08; letter-spacing: -1px; }
+.login-heading > span { color: #748188; font-size: 10px; }
+.login-card form { display: flex; flex-direction: column; gap: 14px; }
+.login-card label { display: flex; flex-direction: column; gap: 7px; color: #45555e; font-size: 9px; font-weight: 780; }
+.login-card input { width: 100%; height: 44px; padding: 0 13px; border: 1px solid #d8dfe2; border-radius: 10px; background: white; color: #182630; outline: none; font-size: 10px; }
+.login-card input:focus { border-color: #a01931; box-shadow: 0 0 0 3px rgba(160,25,49,.09); }
+.login-card form > button { height: 44px; margin-top: 3px; border: 0; border-radius: 10px; background: #a01931; color: white; cursor: pointer; font-size: 10px; font-weight: 800; box-shadow: 0 9px 22px rgba(160,25,49,.2); }
+.login-card form > button:hover { background: #861328; }
+.login-card form > button:disabled { cursor: wait; opacity: .68; }
+.login-error { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 11px; border-radius: 9px; background: #fae9ec; color: #8f1730; font-size: 9px; }
+.login-error span { width: 19px; height: 19px; display: grid; place-items: center; border-radius: 50%; background: #a01931; color: white; font-weight: 850; }
+.login-card footer { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 17px; border-top: 1px solid #e8ecee; color: #8d989e; font-size: 8px; }
+.login-card footer > span { display: flex; align-items: center; gap: 7px; color: #596a73; font-weight: 720; }
+.login-card footer i { width: 7px; height: 7px; border-radius: 50%; background: #2caf7d; box-shadow: 0 0 0 4px rgba(44,175,125,.1); }
+.portal-top { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.session-button { border: 1px solid #d8dfe2; border-radius: 9px; padding: 9px 12px; background: rgba(255,255,255,.78); color: #6c7981; cursor: pointer; font-size: 8px; font-weight: 750; }
+.session-button:hover { border-color: #c899a2; color: #a01931; }
+.workspace-actions { display: flex; align-items: center; gap: 8px; }
+
+@media (max-width: 540px) {
+  .login-page { padding: 16px; }
+  .login-card { padding: 25px 20px; }
+  .login-heading h1 { font-size: 25px; }
+  .workspace-actions { align-items: stretch; flex-direction: column; }
+  .workspace-actions button { padding: 8px 10px; }
+}
