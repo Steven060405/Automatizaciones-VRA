@@ -16,6 +16,8 @@ const people: Person[] = [
   { name: "Profesora Kety Jauregui", initials: "KJ", role: "Vicerrectora Académica", description: "Revisión, conformidad y seguimiento de los procesos.", tone: "kety" },
 ];
 
+const ACTAS_DRIVE_URL = "https://drive.google.com/drive/folders/1LFwml0T6jwio2R0HVILBQ-GxSl1R-VqB?usp=sharing";
+
 export default function PortalClient() {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [activeAutomation, setActiveAutomation] = useState<"actas" | null>(null);
@@ -88,7 +90,7 @@ function PersonWorkspace({ person, activeAutomation, onOpenAutomation, onCloseAu
         ? <div className="person-operation-grid">
           <button className="person-operation" onClick={onOpenAutomation}>
             <span className="operation-index">ACT</span>
-            <span className="operation-info"><strong>Generación de actas</strong><small>Reúne la información del consolidado por grupo y prepara el acta institucional con integrantes, asesor, jurados, horario y calificación.</small><i>Excel consolidado → Word / PDF</i></span>
+            <span className="operation-info"><strong>Generación de actas</strong><small>Reúne la información del consolidado por grupo y prepara el acta institucional con integrantes, jurados, fecha y horario.</small><i>Excel en Drive → Word / PDF</i></span>
             <span className="operation-action">Abrir automatización <b aria-hidden="true">→</b></span>
           </button>
         </div>
@@ -99,61 +101,58 @@ function PersonWorkspace({ person, activeAutomation, onOpenAutomation, onCloseAu
 }
 
 function ActGenerationWorkspace({ person, onBack, onPeople, onLogout }: { person: Person; onBack: () => void; onPeople: () => void; onLogout: () => void }) {
-  const [consolidated, setConsolidated] = useState<File | null>(null);
   const [career, setCareer] = useState("ADM Y MKT");
   const [group, setGroup] = useState("");
-  const [modality, setModality] = useState("Presencial");
   const [validation, setValidation] = useState<"idle" | "error" | "ready">("idle");
 
   const validateConfiguration = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setValidation(consolidated && group.trim() ? "ready" : "error");
+    setValidation(group.trim() ? "ready" : "error");
   };
 
   return <main className="person-workspace actas-workspace">
     <div className="workspace-top"><Brand /><div className="workspace-actions"><button className="back-home" onClick={onBack}>← Automatizaciones de Ingrid</button><button className="session-button" onClick={onLogout}>Cerrar sesión</button></div></div>
 
     <section className="actas-hero">
-      <div className="actas-hero-copy"><button className="automation-back" onClick={onBack}>← Volver</button><p className="portal-eyebrow">CURSOS DE ACTUALIZACIÓN</p><h1>Generación de actas</h1><p>Toma el consolidado de grupos, valida los datos académicos y prepara la salida institucional en Word y PDF.</p></div>
-      <div className="actas-status"><span><i />Piloto guiado</span><small>Responsable</small><strong>{person.name}</strong></div>
+      <div className="actas-hero-copy"><button className="automation-back" onClick={onBack}>← Volver</button><p className="portal-eyebrow">CURSOS DE ACTUALIZACIÓN</p><h1>Generación de actas</h1><p>Usa el consolidado maestro de Drive, agrupa la información por carrera y grupo, y prepara la salida institucional en Word y PDF.</p></div>
+      <div className="actas-status"><span><i />Carpeta configurada</span><small>Responsable</small><strong>{person.name}</strong></div>
     </section>
 
     <section className="actas-route" aria-label="Flujo de la automatización">
-      <div><span>1</span><p><strong>Cargar consolidado</strong><small>Excel por carreras y grupos</small></p></div><b aria-hidden="true">→</b>
-      <div><span>2</span><p><strong>Validar el grupo</strong><small>Integrantes, asesor y jurados</small></p></div><b aria-hidden="true">→</b>
-      <div><span>3</span><p><strong>Preparar el acta</strong><small>Documento Word y PDF</small></p></div>
+      <div><span>1</span><p><strong>Leer el consolidado</strong><small>Archivo maestro en Drive</small></p></div><b aria-hidden="true">→</b>
+      <div><span>2</span><p><strong>Validar el grupo</strong><small>Integrantes, jurados y horario</small></p></div><b aria-hidden="true">→</b>
+      <div><span>3</span><p><strong>Guardar y enlazar</strong><small>Word y PDF sin duplicados</small></p></div>
     </section>
 
     <div className="actas-layout">
       <form className="actas-form" onSubmit={validateConfiguration}>
-        <div className="actas-section-heading"><div><span>PASO 1</span><h2>Fuente de información</h2></div><small>El archivo se mantiene en tu navegador durante este piloto.</small></div>
+        <div className="actas-section-heading"><div><span>PASO 1</span><h2>Fuente única de información</h2></div><small>La plataforma apunta al Drive institucional y no conserva copias del archivo.</small></div>
 
-        <label className={`actas-file ${consolidated ? "selected" : ""}`} htmlFor="consolidated-file">
-          <input key={consolidated ? "selected" : "empty"} id="consolidated-file" type="file" accept=".xlsx,.xls" onChange={(event) => { setConsolidated(event.target.files?.[0] ?? null); setValidation("idle"); }} />
-          <span className="actas-file-icon">XLS</span>
-          <span><strong>{consolidated ? consolidated.name : "Seleccionar consolidado Excel"}</strong><small>{consolidated ? `${(consolidated.size / 1024).toFixed(0)} KB · archivo seleccionado` : "Formatos admitidos: .xlsx y .xls"}</small></span>
-          <b>{consolidated ? "Cambiar" : "Examinar"}</b>
-        </label>
+        <div className="actas-drive-source">
+          <span className="actas-drive-icon">DRV</span>
+          <span><small>CARPETA MAESTRA</small><strong>GENERACIÓN DE ACTAS FINAL</strong><p>Contiene las carpetas de las cinco carreras, cada una con sus salidas WORDS y PDFS.</p></span>
+          <a href={ACTAS_DRIVE_URL} target="_blank" rel="noreferrer">Abrir Drive <b aria-hidden="true">↗</b></a>
+        </div>
 
         <div className="actas-section-heading compact"><div><span>PASO 2</span><h2>Grupo a procesar</h2></div></div>
         <div className="actas-fields">
           <label><span>Carrera / hoja</span><select value={career} onChange={(event) => { setCareer(event.target.value); setValidation("idle"); }}><option>DERECHO</option><option>ADM Y FIN-DPA</option><option>ADM Y MKT</option><option>ECO Y NEG</option><option>ING</option></select></label>
           <label><span>Número de grupo</span><input value={group} onChange={(event) => { setGroup(event.target.value); setValidation("idle"); }} placeholder="Ej. GRUPO 1" /></label>
-          <label><span>Modalidad</span><select value={modality} onChange={(event) => setModality(event.target.value)}><option>Presencial</option><option>Virtual</option></select></label>
+          <label><span>Modalidad fija</span><input value="Presencial" readOnly aria-readonly="true" /></label>
         </div>
 
-        <div className="actas-template"><span>DOC</span><div><small>PLANTILLA DE SALIDA</small><strong>Acta de sustentación grupal</strong><p>Estructura institucional de 2 páginas: datos del grupo, asesor, jurados, calificación y observaciones.</p></div><i>Word + PDF</i></div>
+        <div className="actas-template"><span>DOC</span><div><small>PLANTILLA DE SALIDA</small><strong>Acta de sustentación grupal</strong><p>Estructura institucional de 2 páginas: datos del grupo, título profesional, jurados y observaciones. La nota queda vacía para los profesores.</p></div><i>Word + PDF</i></div>
 
-        {validation === "error" && <p className="actas-message error"><span>!</span>Selecciona el consolidado e indica el número de grupo para continuar.</p>}
-        {validation === "ready" && <div className="actas-message ready"><span>✓</span><div><strong>Configuración validada</strong><p>Se procesará {group.trim().toUpperCase()} de {career} en modalidad {modality.toLowerCase()}. La conexión de generación documental está lista para el siguiente incremento.</p></div></div>}
+        {validation === "error" && <p className="actas-message error"><span>!</span>Indica el número de grupo para continuar.</p>}
+        {validation === "ready" && <div className="actas-message ready"><span>✓</span><div><strong>Destino identificado sin duplicados</strong><p>Se procesará {group.trim().toUpperCase()} de {career} en modalidad presencial. El Word se actualizará en <b>{career}/WORDS</b> y el PDF en <b>{career}/PDFS</b>, usando el número de acta como identificador único.</p><a href={ACTAS_DRIVE_URL} target="_blank" rel="noreferrer">Ver carpeta en Drive ↗</a></div></div>}
 
-        <div className="actas-form-actions"><button type="button" onClick={() => { setConsolidated(null); setGroup(""); setValidation("idle"); }}>Limpiar</button><button type="submit">Validar configuración <span aria-hidden="true">→</span></button></div>
+        <div className="actas-form-actions"><button type="button" onClick={() => { setGroup(""); setValidation("idle"); }}>Limpiar</button><button type="submit">Validar destino <span aria-hidden="true">→</span></button></div>
       </form>
 
       <aside className="actas-summary">
-        <p className="portal-eyebrow">DATOS IDENTIFICADOS</p><h2>Contenido del acta</h2><p className="actas-summary-lead">La automatización está diseñada a partir del consolidado y del acta institucional de referencia.</p>
-        <ul><li><span>01</span><p><strong>Grupo e integrantes</strong><small>Nombres, carrera, código, DNI y fecha de trámite.</small></p></li><li><span>02</span><p><strong>Trabajo y sustentación</strong><small>Número de acta, título, fecha, hora, aula y modalidad.</small></p></li><li><span>03</span><p><strong>Responsables</strong><small>Asesor, jurado 1, jurado 2 y sus documentos.</small></p></li><li><span>04</span><p><strong>Resultado</strong><small>Nota, calificación y espacio de observaciones.</small></p></li></ul>
-        <div className="actas-output"><span aria-hidden="true">↧</span><div><small>SALIDA PREVISTA</small><strong>Acta editable + versión PDF</strong></div></div>
+        <p className="portal-eyebrow">DATOS IDENTIFICADOS</p><h2>Contenido del acta</h2><p className="actas-summary-lead">La automatización toma únicamente los campos acordados del consolidado y deja la calificación para el profesor.</p>
+        <ul><li><span>01</span><p><strong>Acta y programa</strong><small>Número de acta, facultad, título y título profesional.</small></p></li><li><span>02</span><p><strong>Grupo e integrantes</strong><small>Nombres y todas las variables de la tabla de participantes.</small></p></li><li><span>03</span><p><strong>Sustentación presencial</strong><small>Fecha y hora convertidas al formato formal del documento.</small></p></li><li><span>04</span><p><strong>Jurados</strong><small>Orden, nombres y DNI de cada jurado.</small></p></li></ul>
+        <a className="actas-output" href={ACTAS_DRIVE_URL} target="_blank" rel="noreferrer"><span aria-hidden="true">↗</span><div><small>FUENTE Y RESULTADOS</small><strong>Abrir carpeta maestra en Drive</strong></div></a>
       </aside>
     </div>
 
