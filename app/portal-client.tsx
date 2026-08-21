@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 type Person = {
   name: string;
@@ -17,6 +17,9 @@ const people: Person[] = [
 ];
 
 const ACTAS_DRIVE_URL = "https://drive.google.com/drive/folders/1LFwml0T6jwio2R0HVILBQ-GxSl1R-VqB?usp=sharing";
+const ACTAS_PERIOD_DRIVE_URLS: Record<string, string> = {
+  "2025-2": "https://drive.google.com/drive/folders/1XYQtnaKowmyQrRyvKoRTHyXp4tm7Fvxq",
+};
 
 export default function PortalClient() {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
@@ -90,7 +93,7 @@ function PersonWorkspace({ person, activeAutomation, onOpenAutomation, onCloseAu
         ? <div className="person-operation-grid">
           <button className="person-operation" onClick={onOpenAutomation}>
             <span className="operation-index">ACT</span>
-            <span className="operation-info"><strong>Generación de actas</strong><small>Reúne la información del consolidado por grupo y prepara el acta institucional con integrantes, jurados, fecha y horario.</small><i>Excel en Drive → Word / PDF</i></span>
+            <span className="operation-info"><strong>Generación de actas</strong><small>Selecciona el período, procesa el consolidado completo y organiza las actas por carrera en Word y PDF.</small><i>Período → Excel → Word / PDF</i></span>
             <span className="operation-action">Abrir automatización <b aria-hidden="true">→</b></span>
           </button>
         </div>
@@ -101,58 +104,114 @@ function PersonWorkspace({ person, activeAutomation, onOpenAutomation, onCloseAu
 }
 
 function ActGenerationWorkspace({ person, onBack, onPeople, onLogout }: { person: Person; onBack: () => void; onPeople: () => void; onLogout: () => void }) {
-  const [career, setCareer] = useState("ADM Y MKT");
-  const [group, setGroup] = useState("");
-  const [validation, setValidation] = useState<"idle" | "error" | "ready">("idle");
+  const [period, setPeriod] = useState("");
+  const [consolidated, setConsolidated] = useState<File | null>(null);
+  const [processState, setProcessState] = useState<"idle" | "error" | "processing" | "completed">("idle");
+  const [progress, setProgress] = useState(0);
 
-  const validateConfiguration = (event: FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (processState !== "processing") return;
+
+    let currentProgress = 0;
+    const timer = window.setInterval(() => {
+      currentProgress = Math.min(currentProgress + 4, 100);
+      setProgress(currentProgress);
+      if (currentProgress === 100) {
+        window.clearInterval(timer);
+        setProcessState("completed");
+      }
+    }, 180);
+
+    return () => window.clearInterval(timer);
+  }, [processState]);
+
+  const startProcessing = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setValidation(group.trim() ? "ready" : "error");
+    const validPeriod = /^\d{4}-[12]$/.test(period.trim());
+    if (!validPeriod || !consolidated) {
+      setProcessState("error");
+      return;
+    }
+    setProgress(0);
+    setProcessState("processing");
   };
+
+  const resetProcess = () => {
+    setPeriod("");
+    setConsolidated(null);
+    setProgress(0);
+    setProcessState("idle");
+  };
+
+  const driveTarget = ACTAS_PERIOD_DRIVE_URLS[period.trim()] ?? ACTAS_DRIVE_URL;
+  const processingMessage = progress < 20
+    ? "Leyendo las hojas del consolidado"
+    : progress < 45
+      ? "Agrupando carreras, grupos e integrantes"
+      : progress < 70
+        ? "Preparando las actas en Word"
+        : progress < 92
+          ? "Preparando las versiones PDF"
+          : "Verificando destinos y evitando duplicados";
 
   return <main className="person-workspace actas-workspace">
     <div className="workspace-top"><Brand /><div className="workspace-actions"><button className="back-home" onClick={onBack}>← Automatizaciones de Ingrid</button><button className="session-button" onClick={onLogout}>Cerrar sesión</button></div></div>
 
     <section className="actas-hero">
-      <div className="actas-hero-copy"><button className="automation-back" onClick={onBack}>← Volver</button><p className="portal-eyebrow">CURSOS DE ACTUALIZACIÓN</p><h1>Generación de actas</h1><p>Usa el consolidado maestro de Drive, agrupa la información por carrera y grupo, y prepara la salida institucional en Word y PDF.</p></div>
-      <div className="actas-status"><span><i />Carpeta configurada</span><small>Responsable</small><strong>{person.name}</strong></div>
+      <div className="actas-hero-copy"><button className="automation-back" onClick={onBack}>← Volver</button><p className="portal-eyebrow">CURSOS DE ACTUALIZACIÓN</p><h1>Generación de actas</h1><p>Indica el período, carga el consolidado actualizado y sigue el procesamiento hasta que los Word y PDF estén listos para revisar en Drive.</p></div>
+      <div className="actas-status"><span><i />Flujo por período</span><small>Responsable</small><strong>{person.name}</strong></div>
     </section>
 
     <section className="actas-route" aria-label="Flujo de la automatización">
-      <div><span>1</span><p><strong>Leer el consolidado</strong><small>Archivo maestro en Drive</small></p></div><b aria-hidden="true">→</b>
-      <div><span>2</span><p><strong>Validar el grupo</strong><small>Integrantes, jurados y horario</small></p></div><b aria-hidden="true">→</b>
-      <div><span>3</span><p><strong>Guardar y enlazar</strong><small>Word y PDF sin duplicados</small></p></div>
+      <div><span>1</span><p><strong>Elegir período</strong><small>Ejemplo: 2025-2</small></p></div><b aria-hidden="true">→</b>
+      <div><span>2</span><p><strong>Cargar el Excel</strong><small>Consolidado actualizado</small></p></div><b aria-hidden="true">→</b>
+      <div><span>3</span><p><strong>Procesar y revisar</strong><small>Word, PDF y acceso a Drive</small></p></div>
     </section>
 
     <div className="actas-layout">
-      <form className="actas-form" onSubmit={validateConfiguration}>
-        <div className="actas-section-heading"><div><span>PASO 1</span><h2>Fuente única de información</h2></div><small>La plataforma apunta al Drive institucional y no conserva copias del archivo.</small></div>
+      <form className="actas-form" onSubmit={startProcessing}>
+        <div className="actas-section-heading"><div><span>PASO 1</span><h2>Período académico</h2></div><small>El período determina la carpeta donde se organizarán todas las carreras.</small></div>
 
-        <div className="actas-drive-source">
-          <span className="actas-drive-icon">DRV</span>
-          <span><small>CARPETA MAESTRA</small><strong>GENERACIÓN DE ACTAS FINAL</strong><p>Contiene las carpetas de las cinco carreras, cada una con sus salidas WORDS y PDFS.</p></span>
-          <a href={ACTAS_DRIVE_URL} target="_blank" rel="noreferrer">Abrir Drive <b aria-hidden="true">↗</b></a>
+        <div className="actas-period-field">
+          <label htmlFor="academic-period"><span>PERÍODO</span><input id="academic-period" list="academic-periods" value={period} onChange={(event) => { setPeriod(event.target.value); setProcessState("idle"); }} placeholder="Ej. 2025-2" disabled={processState === "processing"} /></label>
+          <datalist id="academic-periods"><option value="2025-2" /></datalist>
+          <div><small>RUTA DE SALIDA</small><strong>{period.trim() || "PERÍODO"} / CARRERA / WORDS · PDFS</strong></div>
         </div>
 
-        <div className="actas-section-heading compact"><div><span>PASO 2</span><h2>Grupo a procesar</h2></div></div>
-        <div className="actas-fields">
-          <label><span>Carrera / hoja</span><select value={career} onChange={(event) => { setCareer(event.target.value); setValidation("idle"); }}><option>DERECHO</option><option>ADM Y FIN-DPA</option><option>ADM Y MKT</option><option>ECO Y NEG</option><option>ING</option></select></label>
-          <label><span>Número de grupo</span><input value={group} onChange={(event) => { setGroup(event.target.value); setValidation("idle"); }} placeholder="Ej. GRUPO 1" /></label>
-          <label><span>Modalidad fija</span><input value="Presencial" readOnly aria-readonly="true" /></label>
-        </div>
+        <div className="actas-section-heading compact"><div><span>PASO 2</span><h2>Consolidado de temas y grupos</h2></div><small>Se procesarán todas las carreras y grupos incluidos en el archivo.</small></div>
 
-        <div className="actas-template"><span>DOC</span><div><small>PLANTILLA DE SALIDA</small><strong>Acta de sustentación grupal</strong><p>Estructura institucional de 2 páginas: datos del grupo, título profesional, jurados y observaciones. La nota queda vacía para los profesores.</p></div><i>Word + PDF</i></div>
+        <label className={`actas-file ${consolidated ? "selected" : ""}`} htmlFor="consolidated-file">
+          <input key={consolidated ? "selected" : "empty"} id="consolidated-file" type="file" accept=".xlsx,.xls" disabled={processState === "processing"} onChange={(event) => { setConsolidated(event.target.files?.[0] ?? null); setProcessState("idle"); }} />
+          <span className="actas-file-icon">XLS</span>
+          <span><strong>{consolidated ? consolidated.name : "Seleccionar consolidado Excel"}</strong><small>{consolidated ? `${(consolidated.size / 1024).toFixed(0)} KB · archivo preparado` : "Formatos admitidos: .xlsx y .xls"}</small></span>
+          <b>{consolidated ? "Cambiar" : "Examinar"}</b>
+        </label>
 
-        {validation === "error" && <p className="actas-message error"><span>!</span>Indica el número de grupo para continuar.</p>}
-        {validation === "ready" && <div className="actas-message ready"><span>✓</span><div><strong>Destino identificado sin duplicados</strong><p>Se procesará {group.trim().toUpperCase()} de {career} en modalidad presencial. El Word se actualizará en <b>{career}/WORDS</b> y el PDF en <b>{career}/PDFS</b>, usando el número de acta como identificador único.</p><a href={ACTAS_DRIVE_URL} target="_blank" rel="noreferrer">Ver carpeta en Drive ↗</a></div></div>}
+        <div className="actas-template"><span>DOC</span><div><small>PLANTILLA DE SALIDA</small><strong>Acta de sustentación grupal · modalidad presencial</strong><p>Estructura institucional de 2 páginas. La nota permanece vacía para que la complete el profesor.</p></div><i>Word + PDF</i></div>
 
-        <div className="actas-form-actions"><button type="button" onClick={() => { setGroup(""); setValidation("idle"); }}>Limpiar</button><button type="submit">Validar destino <span aria-hidden="true">→</span></button></div>
+        {processState === "error" && <p className="actas-message error"><span>!</span>Escribe el período con el formato 2025-2 y selecciona el archivo Excel.</p>}
+
+        {processState === "processing" && <div className="actas-processing" aria-live="polite">
+          <div className="actas-progress-meta"><div><small>PROCESANDO CONSOLIDADO</small><strong>{processingMessage}</strong></div><b>{progress}%</b></div>
+          <div className="actas-progress-track" role="progressbar" aria-label="Progreso de generación de actas" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><span style={{ width: `${progress}%` }} /></div>
+          <p>No cierres esta pantalla mientras se preparan los documentos.</p>
+        </div>}
+
+        {processState === "completed" && <div className="actas-completed">
+          <span aria-hidden="true">✓</span><div><small>PROCESO FINALIZADO</small><strong>Word y PDF organizados para el período {period.trim()}</strong><p>Los resultados corresponden a las carreras y grupos del archivo <b>{consolidated?.name}</b>. El número de acta se utiliza para evitar duplicados.</p></div>
+          <a href={driveTarget} target="_blank" rel="noreferrer">Abrir Drive de {period.trim()} <b aria-hidden="true">↗</b></a>
+        </div>}
+
+        <div className="actas-form-actions"><button type="button" onClick={resetProcess} disabled={processState === "processing"}>Limpiar</button><button type="submit" disabled={processState === "processing" || processState === "completed"}>{processState === "processing" ? "Procesando…" : processState === "completed" ? "Proceso finalizado" : "Procesar consolidado"} <span aria-hidden="true">→</span></button></div>
+        <p className="actas-pilot-note">La barra muestra el flujo que seguirá la automatización. La creación y carga real de archivos se activará cuando Drive tenga habilitado el permiso institucional de escritura.</p>
       </form>
 
       <aside className="actas-summary">
-        <p className="portal-eyebrow">DATOS IDENTIFICADOS</p><h2>Contenido del acta</h2><p className="actas-summary-lead">La automatización toma únicamente los campos acordados del consolidado y deja la calificación para el profesor.</p>
+        <p className="portal-eyebrow">PROCESAMIENTO AUTOMÁTICO</p><h2>Qué hará con el Excel</h2><p className="actas-summary-lead">El consolidado completo se separará por carrera y grupo dentro del período seleccionado.</p>
         <ul><li><span>01</span><p><strong>Acta y programa</strong><small>Número de acta, facultad, título y título profesional.</small></p></li><li><span>02</span><p><strong>Grupo e integrantes</strong><small>Nombres y todas las variables de la tabla de participantes.</small></p></li><li><span>03</span><p><strong>Sustentación presencial</strong><small>Fecha y hora convertidas al formato formal del documento.</small></p></li><li><span>04</span><p><strong>Jurados</strong><small>Orden, nombres y DNI de cada jurado.</small></p></li></ul>
-        <a className="actas-output" href={ACTAS_DRIVE_URL} target="_blank" rel="noreferrer"><span aria-hidden="true">↗</span><div><small>FUENTE Y RESULTADOS</small><strong>Abrir carpeta maestra en Drive</strong></div></a>
+        {processState === "completed"
+          ? <a className="actas-output" href={driveTarget} target="_blank" rel="noreferrer"><span aria-hidden="true">↗</span><div><small>RESULTADOS DISPONIBLES</small><strong>Abrir período {period.trim()} en Drive</strong></div></a>
+          : <div className="actas-output muted"><span aria-hidden="true">•••</span><div><small>ACCESO AL DRIVE</small><strong>Disponible al terminar el proceso</strong></div></div>}
       </aside>
     </div>
 

@@ -470,6 +470,16 @@ button { font: inherit; }
 .actas-file strong { max-width: 420px; overflow: hidden; color: #263943; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .actas-file small { margin-top: 5px; color: #8b979d; font-size: 8px; }
 .actas-file > b { margin-left: auto; color: #a01931; font-size: 8px; }
+.actas-file:has(input:disabled) { pointer-events: none; opacity: .66; }
+.actas-period-field { display: grid; grid-template-columns: minmax(190px,.7fr) minmax(0,1.3fr); gap: 12px; align-items: stretch; }
+.actas-period-field label { display: flex; flex-direction: column; gap: 7px; color: #52616a; font-size: 8px; font-weight: 780; }
+.actas-period-field label > span { color: #52616a; font-size: 8px; font-weight: 780; letter-spacing: 0; }
+.actas-period-field input { width: 100%; height: 48px; padding: 0 13px; border: 1px solid #d8dfe2; border-radius: 10px; outline: none; background: white; color: #263943; font-family: inherit; font-size: 11px; font-weight: 720; }
+.actas-period-field input:focus { border-color: #a01931; box-shadow: 0 0 0 3px rgba(160,25,49,.08); }
+.actas-period-field input:disabled { background: #f4f6f6; color: #66767e; }
+.actas-period-field > div { margin-top: 15px; padding: 11px 13px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e6e8; border-radius: 10px; background: #f7f9f9; }
+.actas-period-field > div small { color: #8c989e; font-size: 6px; font-weight: 850; letter-spacing: .8px; }
+.actas-period-field > div strong { margin-top: 5px; color: #344852; font-size: 8px; }
 .actas-drive-source { min-height: 96px; display: flex; align-items: center; gap: 13px; padding: 16px; border: 1px solid #cfe1d8; border-radius: 12px; background: linear-gradient(135deg,#f7fcfa,#fbfcfb); }
 .actas-drive-icon { width: 43px; height: 43px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 11px; background: #e3f0ea; color: #197657; font-size: 8px; font-weight: 850; letter-spacing: .4px; }
 .actas-drive-source > span:nth-child(2) { min-width: 0; }
@@ -502,10 +512,29 @@ button { font: inherit; }
 .actas-message.ready p { margin: 3px 0 0; }
 .actas-message.ready a { display: inline-block; margin-top: 7px; color: #146548; font-weight: 820; text-decoration: none; }
 .actas-message.ready a:hover { text-decoration: underline; }
+.actas-processing { margin-top: 16px; padding: 16px; border: 1px solid #d8e2e7; border-radius: 12px; background: linear-gradient(135deg,#f8fafb,#f5f8f9); }
+.actas-progress-meta { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.actas-progress-meta small,.actas-progress-meta strong { display: block; }
+.actas-progress-meta small { color: #a01931; font-size: 6px; font-weight: 850; letter-spacing: .8px; }
+.actas-progress-meta strong { margin-top: 5px; color: #2b3f49; font-size: 9px; }
+.actas-progress-meta > b { color: #a01931; font-size: 15px; }
+.actas-progress-track { height: 9px; margin-top: 13px; overflow: hidden; border-radius: 99px; background: #dfe6e9; }
+.actas-progress-track > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#a01931,#d43c58); box-shadow: 0 0 14px rgba(160,25,49,.2); transition: width .16s linear; }
+.actas-processing > p { margin: 9px 0 0; color: #849198; font-size: 7px; }
+.actas-completed { margin-top: 16px; padding: 16px; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 12px; border: 1px solid #bcdaca; border-radius: 12px; background: #f2faf6; }
+.actas-completed > span { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: #238260; color: white; font-size: 13px; font-weight: 850; }
+.actas-completed small,.actas-completed strong { display: block; }
+.actas-completed small { color: #238260; font-size: 6px; font-weight: 850; letter-spacing: .8px; }
+.actas-completed strong { margin-top: 4px; color: #195b44; font-size: 9px; }
+.actas-completed p { margin: 5px 0 0; color: #557466; font-size: 7px; line-height: 1.45; }
+.actas-completed > a { padding: 10px 12px; border-radius: 9px; background: #197657; color: white; font-size: 8px; font-weight: 820; text-decoration: none; white-space: nowrap; }
+.actas-completed > a:hover { background: #125d45; }
 .actas-form-actions { margin-top: 20px; padding-top: 17px; display: flex; justify-content: flex-end; gap: 9px; border-top: 1px solid #e8ebed; }
 .actas-form-actions button { height: 40px; padding: 0 15px; border: 1px solid #d7dfe2; border-radius: 9px; background: white; color: #62717a; font-family: inherit; font-size: 9px; font-weight: 780; cursor: pointer; }
 .actas-form-actions button[type="submit"] { border-color: #a01931; background: #a01931; color: white; box-shadow: 0 8px 20px rgba(160,25,49,.17); }
 .actas-form-actions button[type="submit"] span { margin-left: 8px; }
+.actas-form-actions button:disabled { cursor: wait; opacity: .58; box-shadow: none; }
+.actas-pilot-note { margin: 11px 0 0; color: #94a0a6; font-size: 6px; line-height: 1.5; text-align: right; }
 
 .actas-summary { padding: 25px; }
 .actas-summary .portal-eyebrow { margin-bottom: 7px; }
@@ -521,6 +550,10 @@ button { font: inherit; }
 .actas-output { margin-top: 18px; padding: 14px; display: flex; align-items: center; gap: 10px; border-radius: 11px; background: #1c303b; color: white; }
 .actas-output { text-decoration: none; transition: .18s ease; }
 .actas-output:hover { background: #274553; transform: translateY(-1px); }
+.actas-output.muted { background: #eef2f3; color: #50616a; }
+.actas-output.muted:hover { transform: none; }
+.actas-output.muted > span { background: #dfe6e9; color: #7f8e95; }
+.actas-output.muted small { color: #8e9aa0; }
 .actas-output > span { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 8px; background: rgba(255,255,255,.09); color: #dce5e9; }
 .actas-output small,.actas-output strong { display: block; }
 .actas-output small { color: #8fa2ac; font-size: 6px; letter-spacing: .8px; }
@@ -537,6 +570,8 @@ button { font: inherit; }
   .actas-route { grid-template-columns: 1fr; }
   .actas-route > b { transform: rotate(90deg); }
   .actas-fields { grid-template-columns: 1fr; }
+  .actas-period-field { grid-template-columns: 1fr; }
+  .actas-period-field > div { margin-top: 0; }
   .actas-section-heading { align-items: flex-start; flex-direction: column; }
   .actas-section-heading > small { text-align: left; }
   .actas-summary { display: block; }
@@ -547,6 +582,8 @@ button { font: inherit; }
   .actas-file > b { width: 100%; margin-left: 55px; }
   .actas-template { align-items: flex-start; flex-wrap: wrap; }
   .actas-template > i { margin-left: 50px; }
+  .actas-completed { grid-template-columns: auto 1fr; }
+  .actas-completed > a { grid-column: 1 / -1; text-align: center; }
   .actas-drive-source { align-items: flex-start; flex-wrap: wrap; }
   .actas-drive-source > a { width: 100%; margin-left: 56px; text-align: center; }
   .actas-form-actions { flex-direction: column-reverse; }
