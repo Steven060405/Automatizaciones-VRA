@@ -198,7 +198,7 @@ function ActGenerationWorkspace({ person, onBack, onPeople, onLogout }: { person
         </div>}
 
         {processState === "completed" && <div className="actas-completed">
-          <span aria-hidden="true">✓</span><div><small>PROCESO FINALIZADO</small><strong>Word y PDF organizados para el período {period.trim()}</strong><p>Los resultados corresponden a las carreras y grupos del archivo <b>{consolidated?.name}</b>. El número de acta se utiliza para evitar duplicados.</p></div>
+          <span aria-hidden="true">✓</span><div><small>VISTA DEL PROCESO FINALIZADA</small><strong>Destino preparado para el período {period.trim()}</strong><p>El flujo contempla todas las carreras y grupos de <b>{consolidated?.name}</b>. Al activar la escritura en Drive, el número de acta evitará los duplicados.</p></div>
           <a href={driveTarget} target="_blank" rel="noreferrer">Abrir Drive de {period.trim()} <b aria-hidden="true">↗</b></a>
         </div>}
 
@@ -210,7 +210,7 @@ function ActGenerationWorkspace({ person, onBack, onPeople, onLogout }: { person
         <p className="portal-eyebrow">PROCESAMIENTO AUTOMÁTICO</p><h2>Qué hará con el Excel</h2><p className="actas-summary-lead">El consolidado completo se separará por carrera y grupo dentro del período seleccionado.</p>
         <ul><li><span>01</span><p><strong>Acta y programa</strong><small>Número de acta, facultad, título y título profesional.</small></p></li><li><span>02</span><p><strong>Grupo e integrantes</strong><small>Nombres y todas las variables de la tabla de participantes.</small></p></li><li><span>03</span><p><strong>Sustentación presencial</strong><small>Fecha y hora convertidas al formato formal del documento.</small></p></li><li><span>04</span><p><strong>Jurados</strong><small>Orden, nombres y DNI de cada jurado.</small></p></li></ul>
         {processState === "completed"
-          ? <a className="actas-output" href={driveTarget} target="_blank" rel="noreferrer"><span aria-hidden="true">↗</span><div><small>RESULTADOS DISPONIBLES</small><strong>Abrir período {period.trim()} en Drive</strong></div></a>
+          ? <a className="actas-output" href={driveTarget} target="_blank" rel="noreferrer"><span aria-hidden="true">↗</span><div><small>CARPETA DEL PERÍODO</small><strong>Abrir período {period.trim()} en Drive</strong></div></a>
           : <div className="actas-output muted"><span aria-hidden="true">•••</span><div><small>ACCESO AL DRIVE</small><strong>Disponible al terminar el proceso</strong></div></div>}
       </aside>
     </div>
