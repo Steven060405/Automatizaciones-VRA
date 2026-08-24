@@ -212,6 +212,12 @@ test("muestra las tres responsables y asigna la automatización solo a Ingrid", 
   assert.match(indexSource, /selectedPerson !== 'Ingrid Zarate'/);
 });
 
+test("mantiene fija la ubicación principal de los archivos en Drive", () => {
+  assert.match(indexSource, /Ubicación de archivos/);
+  assert.match(indexSource, /https:\/\/drive\.google\.com\/drive\/folders\/1LFwml0T6jwio2R0HVILBQ-GxSl1R-VqB\?usp=drive_link/);
+  assert.match(indexSource, /target="_blank" rel="noopener noreferrer"/);
+});
+
 test("impide publicar código fuente como si fuera la interfaz", () => {
   assert.match(source, /output\.getContent\(\)/);
   assert.match(source, /!\/\^\\s\*<!doctype html>\/i\.test\(html\)/);
