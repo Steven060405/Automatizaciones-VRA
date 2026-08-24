@@ -43,7 +43,12 @@ const FEMALE_ADVISOR_FIRST_NAMES = [
 ];
 
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile("Index")
+  const output = HtmlService.createHtmlOutputFromFile("Index");
+  const html = output.getContent();
+  if (!/^\s*<!doctype html>/i.test(html) || html.indexOf('data-person="Ingrid Zarate"') < 0) {
+    throw new Error("La interfaz de Ingrid no contiene un documento HTML válido.");
+  }
+  return output
     .setTitle("Automatizaciones del VRA")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }

@@ -206,3 +206,9 @@ test("muestra únicamente el ecosistema y las automatizaciones de Ingrid", () =>
   assert.doesNotMatch(indexSource, /data-person="Aisha Tizón"/);
   assert.doesNotMatch(indexSource, /data-person="Profesora Kety Jauregui"/);
 });
+
+test("impide publicar código fuente como si fuera la interfaz", () => {
+  assert.match(source, /output\.getContent\(\)/);
+  assert.match(source, /!\/\^\\s\*<!doctype html>\/i\.test\(html\)/);
+  assert.match(source, /data-person="Ingrid Zarate"/);
+});
