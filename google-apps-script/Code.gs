@@ -293,12 +293,19 @@ function placeObservationsOnSecondPage_(body) {
   const paragraph = element.asParagraph();
   const paragraphIndex = body.getChildIndex(paragraph);
   const previous = paragraphIndex > 0 ? body.getChild(paragraphIndex - 1) : null;
-  const alreadySeparated = paragraphHasPageBreak_(paragraph) || (
-    previous &&
+  const sectionStart = previous &&
     previous.getType() === DocumentApp.ElementType.PARAGRAPH &&
-    paragraphHasPageBreak_(previous.asParagraph())
+    !clean_(previous.asParagraph().getText())
+      ? previous.asParagraph()
+      : paragraph;
+  const sectionStartIndex = body.getChildIndex(sectionStart);
+  const beforeSection = sectionStartIndex > 0 ? body.getChild(sectionStartIndex - 1) : null;
+  const alreadySeparated = paragraphHasPageBreak_(sectionStart) || (
+    beforeSection &&
+    beforeSection.getType() === DocumentApp.ElementType.PARAGRAPH &&
+    paragraphHasPageBreak_(beforeSection.asParagraph())
   );
-  if (!alreadySeparated) body.insertPageBreak(paragraphIndex);
+  if (!alreadySeparated) body.insertPageBreak(sectionStartIndex);
 }
 
 function paragraphHasPageBreak_(paragraph) {

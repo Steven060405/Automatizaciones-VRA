@@ -47,35 +47,47 @@ test("completa nombre y DNI del asesor en su párrafo", () => {
   );
 });
 
-test("inserta una sola separación antes de observaciones", () => {
+test("mantiene el recuadro y las observaciones juntos en la segunda hoja", () => {
   const before = {
     getType: () => "PARAGRAPH",
     asParagraph() { return this; },
     getNumChildren: () => 0,
+    getText: () => "DNI: 42405616",
+  };
+  const checkboxAnchor = {
+    getType: () => "PARAGRAPH",
+    asParagraph() { return this; },
+    getNumChildren: () => 1,
+    getChild: () => ({ getType: () => "POSITIONED_IMAGE" }),
+    getText: () => "",
   };
   const observation = {
     getType: () => "PARAGRAPH",
     asParagraph() { return this; },
     getNumChildren: () => 1,
     getChild: () => ({ getType: () => "TEXT" }),
+    getText: () => "SIN OBSERVACIONES / RECOMENDACIONES",
   };
   const textElement = {
     getType: () => "TEXT",
     getParent: () => observation,
   };
-  const children = [before, observation];
+  const children = [before, checkboxAnchor, observation];
   let insertions = 0;
+  const insertionIndexes = [];
   const body = {
     findText: () => ({ getElement: () => textElement }),
     getChildIndex: (child) => children.indexOf(child),
     getChild: (index) => children[index],
     insertPageBreak: (index) => {
       insertions += 1;
+      insertionIndexes.push(index);
       children.splice(index, 0, {
         getType: () => "PARAGRAPH",
         asParagraph() { return this; },
         getNumChildren: () => 1,
         getChild: () => ({ getType: () => "PAGE_BREAK" }),
+        getText: () => "",
       });
     },
   };
@@ -84,4 +96,5 @@ test("inserta una sola separación antes de observaciones", () => {
   context.placeObservationsOnSecondPage_(body);
 
   assert.equal(insertions, 1);
+  assert.deepEqual(insertionIndexes, [1]);
 });
