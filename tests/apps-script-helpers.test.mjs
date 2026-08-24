@@ -136,10 +136,14 @@ test("crea primero el período y las carpetas de cada carrera", () => {
 });
 
 test("prepara las carpetas antes de generar y verifica los archivos al final", () => {
+  const periodPosition = indexSource.indexOf(".preparePeriod(period)");
+  const analyzePosition = indexSource.indexOf(".analyzeWorkbook(base64, file.name)");
   const preparePosition = indexSource.indexOf(".prepareGeneration(period, careers)");
   const batchPosition = indexSource.indexOf(".generateBatch(period, batch)");
   const verifyPosition = indexSource.indexOf(".verifyGeneration(period, expected)");
 
+  assert.ok(periodPosition > 0);
+  assert.ok(periodPosition < analyzePosition);
   assert.ok(preparePosition > 0);
   assert.ok(batchPosition > 0);
   assert.ok(verifyPosition > batchPosition);

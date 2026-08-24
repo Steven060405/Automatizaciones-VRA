@@ -61,6 +61,20 @@ function analyzeWorkbook(base64Data, fileName) {
   }
 }
 
+function preparePeriod(period) {
+  validatePeriod_(period);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const rootFolder = DriveApp.getFolderById(ROOT_FOLDER_ID);
+    const periodFolder = getOrCreateFolder_(rootFolder, period);
+    console.log("Carpeta del período confirmada: " + period);
+    return { periodUrl: periodFolder.getUrl() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function prepareGeneration(period, careerNames) {
   validatePeriod_(period);
   if (!Array.isArray(careerNames) || !careerNames.length) {

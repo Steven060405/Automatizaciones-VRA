@@ -170,7 +170,18 @@
       if (file.size > 8 * 1024 * 1024) return showError('El archivo supera 8 MB. Reduce su tamaño antes de procesarlo.');
 
       running = true; runButton.disabled = true; clearButton.disabled = true; workbookInput.disabled = true; periodInput.disabled = true;
-      hideMessages(); processing.classList.remove('hidden'); setProgress(4, 'Leyendo las hojas del consolidado');
+      hideMessages(); processing.classList.remove('hidden'); setProgress(4, 'Creando la carpeta del período ' + period);
+      google.script.run
+        .withSuccessHandler(function(){
+          setProgress(8, 'Carpeta ' + period + ' confirmada en Drive');
+          readWorkbook(period, file);
+        })
+        .withFailureHandler(function(error){ finishError(error && error.message ? error.message : String(error)); })
+        .preparePeriod(period);
+    });
+
+    function readWorkbook(period, file){
+      setProgress(10, 'Leyendo las hojas del consolidado');
       const reader = new FileReader();
       reader.onerror = function(){ finishError('No se pudo leer el archivo seleccionado.'); };
       reader.onload = function(){
@@ -181,7 +192,7 @@
           .analyzeWorkbook(base64, file.name);
       };
       reader.readAsDataURL(file);
-    });
+    }
 
     function generateGroups(period, groups){
       if (!groups || !groups.length) return finishError('No se encontraron grupos válidos en el Excel.');
