@@ -28,24 +28,57 @@ test("reduce la tabla al encabezado más los alumnos reales", () => {
   assert.equal(rows, 3);
 });
 
-test("completa nombre y DNI del asesor en su párrafo", () => {
+function createAdvisorParagraphHarness() {
   let output = "";
-  const paragraph = {
+  const boldRanges = [];
+  const paragraphValue = {
+    setText(value) {
+      output = value;
+      return this;
+    },
+    editAsText: () => ({
+      setBold: (start, end, value) => boldRanges.push({ start, end, value }),
+    }),
+  };
+  const paragraphElement = {
     getType: () => "PARAGRAPH",
-    asParagraph: () => ({ setText: (value) => { output = value; } }),
+    asParagraph: () => paragraphValue,
   };
   const textElement = {
     getType: () => "TEXT",
-    getParent: () => paragraph,
+    getParent: () => paragraphElement,
   };
   const body = { findText: () => ({ getElement: () => textElement }) };
+  return { body, output: () => output, boldRanges };
+}
 
-  context.fillAdvisor_(body, { name: "Estuardo Victor Lu Chang Say", dni: "09303769" });
+test("completa el asesor varón con nombre en mayúsculas y negrita", () => {
+  const harness = createAdvisorParagraphHarness();
+
+  context.fillAdvisor_(harness.body, { name: "Estuardo Victor Lu Chang Say", dni: "09303769", gender: "M" });
 
   assert.equal(
-    output,
-    "Asesorados por el profesor: Estuardo Victor Lu Chang Say\t\tDNI: 09303769",
+    harness.output(),
+    "Asesorados por el profesor: ESTUARDO VICTOR LU CHANG SAY\t\tDNI: 09303769",
   );
+  assert.deepEqual(harness.boldRanges, [{ start: 28, end: 55, value: true }]);
+});
+
+test("usa profesora para una asesora y pone todo su nombre en mayúsculas y negrita", () => {
+  const harness = createAdvisorParagraphHarness();
+
+  context.fillAdvisor_(harness.body, { name: "María Elena Torres Ruiz", dni: "12345678", gender: "F" });
+
+  assert.equal(
+    harness.output(),
+    "Asesorados por la profesora: MARÍA ELENA TORRES RUIZ\t\tDNI: 12345678",
+  );
+  assert.deepEqual(harness.boldRanges, [{ start: 29, end: 51, value: true }]);
+});
+
+test("reconoce automáticamente nombres femeninos si no hay columna de género", () => {
+  assert.equal(context.advisorIsFemale_({ name: "Ingrid Zárate" }), true);
+  assert.equal(context.advisorIsFemale_({ name: "Diego San Martin Villaverde" }), false);
 });
 
 test("mantiene el recuadro y las observaciones juntos en la segunda hoja", () => {

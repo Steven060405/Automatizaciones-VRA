@@ -15,6 +15,7 @@ export type ActJuror = {
 export type ActAdvisor = {
   name: string;
   dni: string;
+  gender: string;
 };
 
 export type ActGroup = {

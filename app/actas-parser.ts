@@ -113,6 +113,10 @@ function buildColumnMap(row: Row) {
     title: headerIndex(headers, (header) => header.includes("TITULOTENTATIVO") || header.includes("TEMADELTRABAJO")),
     advisorDni: headerIndex(headers, (header) => header === "DNIASESOR" || header === "DNIDELASESOR"),
     advisorName: headerIndex(headers, (header) => header === "ASESOR" || header === "ASESORA" || header.includes("NOMBREDELASESOR")),
+    advisorGender: headerIndex(headers, (header) =>
+      header === "GENEROASESOR" || header === "GENERODELASESOR" ||
+      header === "SEXOASESOR" || header === "SEXODELASESOR" ||
+      header === "TRATAMIENTOASESOR" || header === "TRATAMIENTODELASESOR"),
     juror1Dni: headerIndex(headers, (header) => header === "DNIJURADO1"),
     juror1Name: headerIndex(headers, (header) => header === "JURADO1"),
     juror2Dni: headerIndex(headers, (header) => header === "DNIJURADO2"),
@@ -162,7 +166,7 @@ export async function parseActasWorkbook(file: File): Promise<ActGroup[]> {
         year: "",
         professionalTitle: "",
         members: [],
-        advisor: { name: "", dni: "" },
+        advisor: { name: "", dni: "", gender: "" },
         jurors: [{ name: "", dni: "" }, { name: "", dni: "" }],
       } satisfies ActGroup;
 
@@ -170,6 +174,7 @@ export async function parseActasWorkbook(file: File): Promise<ActGroup[]> {
       existing.title = mergeFirst(existing.title, valueAt(row, columns.title));
       existing.advisor.name = mergeFirst(existing.advisor.name, valueAt(row, columns.advisorName));
       existing.advisor.dni = mergeFirst(existing.advisor.dni, valueAt(row, columns.advisorDni), (value) => identifier(value, 8));
+      existing.advisor.gender = mergeFirst(existing.advisor.gender, valueAt(row, columns.advisorGender));
       existing.jurors[0].name = mergeFirst(existing.jurors[0].name, valueAt(row, columns.juror1Name));
       existing.jurors[0].dni = mergeFirst(existing.jurors[0].dni, valueAt(row, columns.juror1Dni), (value) => identifier(value, 8));
       existing.jurors[1].name = mergeFirst(existing.jurors[1].name, valueAt(row, columns.juror2Name));

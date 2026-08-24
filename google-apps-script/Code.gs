@@ -28,6 +28,20 @@ const PROFESSIONAL_TITLES = {
   "INGENIERIA DE SISTEMAS": "INGENIERO (A) DE SISTEMAS",
 };
 
+const FEMALE_ADVISOR_FIRST_NAMES = [
+  "ADRIANA", "AISHA", "ALEJANDRA", "ALEXANDRA", "ALICIA", "ANA", "ANDREA", "ANGELA",
+  "BEATRIZ", "CARMEN", "CAROLINA", "CATALINA", "CECILIA", "CLAUDIA", "CRISTINA",
+  "DANIELA", "DIANA", "DORIS", "ELENA", "ELIZABETH", "ERIKA", "EVELYN", "FABIOLA",
+  "FERNANDA", "GABRIELA", "GIANNINA", "GLADYS", "GRACIELA", "INGRID", "IRIS", "ISABEL",
+  "JACQUELINE", "JANET", "JESSICA", "JOHANNA", "JULIA", "JULIANA", "KAREN", "KARINA",
+  "KATHERINE", "KATIA", "KELLY", "KETY", "LAURA", "LILIANA", "LOURDES", "LUCIA", "LUZ",
+  "MARIA", "MARIANA", "MARIELA", "MARISOL", "MARTA", "MERCEDES", "MILAGROS", "MONICA",
+  "NANCY", "NATALIA", "NICOLE", "NORMA", "OLGA", "PAMELA", "PAOLA", "PATRICIA", "PILAR",
+  "RAQUEL", "ROCIO", "ROSA", "ROSARIO", "ROSSANA", "RUTH", "SANDRA", "SILVIA", "SOFIA",
+  "SONIA", "SUSANA", "TERESA", "VALERIA", "VANESSA", "VERONICA", "VICTORIA", "VIOLETA",
+  "XIOMARA", "YESENIA", "YOLANDA",
+];
+
 function doGet() {
   return HtmlService.createHtmlOutputFromFile("Index")
     .setTitle("Automatizaciones del VRA")
@@ -176,7 +190,7 @@ function parseWorkbook_(workbook) {
           year: "",
           professionalTitle: "",
           members: [],
-          advisor: { name: "", dni: "" },
+          advisor: { name: "", dni: "", gender: "" },
           jurors: [{ name: "", dni: "" }, { name: "", dni: "" }],
         };
         groupOrder.push(key);
@@ -187,6 +201,7 @@ function parseWorkbook_(workbook) {
       group.title = mergeFirst_(group.title, valueAt_(row, columns.title));
       group.advisor.name = mergeFirst_(group.advisor.name, valueAt_(row, columns.advisorName));
       group.advisor.dni = mergeFirst_(group.advisor.dni, valueAt_(row, columns.advisorDni), function(value) { return identifier_(value, 8); });
+      group.advisor.gender = mergeFirst_(group.advisor.gender, valueAt_(row, columns.advisorGender));
       group.jurors[0].name = mergeFirst_(group.jurors[0].name, valueAt_(row, columns.juror1Name));
       group.jurors[0].dni = mergeFirst_(group.jurors[0].dni, valueAt_(row, columns.juror1Dni), function(value) { return identifier_(value, 8); });
       group.jurors[1].name = mergeFirst_(group.jurors[1].name, valueAt_(row, columns.juror2Name));
@@ -288,7 +303,7 @@ function replacementsFor_(group) {
     "@@MES@@": clean_(group.month),
     "@@ANIO@@": clean_(group.year),
     "@@PROF@@": clean_(group.professionalTitle),
-    "@@AN@@": clean_(advisor.name),
+    "@@AN@@": clean_(advisor.name).toUpperCase(),
     "@@AD@@": clean_(advisor.dni),
     "@@J1N@@": clean_((jurors[0] || {}).name),
     "@@J1D@@": clean_((jurors[0] || {}).dni),
@@ -308,7 +323,7 @@ function replacementsFor_(group) {
 }
 
 function fillAdvisor_(body, advisor) {
-  const match = body.findText("Asesorados por el profesor:");
+  const match = body.findText("Asesorados por el profesor:") || body.findText("Asesorados por la profesora:");
   if (!match) throw new Error("La plantilla no contiene la línea del asesor.");
 
   let element = match.getElement();
@@ -317,9 +332,34 @@ function fillAdvisor_(body, advisor) {
   }
   if (!element) throw new Error("No se pudo ubicar el párrafo del asesor en la plantilla.");
 
-  element.asParagraph().setText(
-    "Asesorados por el profesor: " + clean_(advisor.name) + "\t\tDNI: " + clean_(advisor.dni)
-  );
+  const advisorName = clean_(advisor.name).toUpperCase();
+  const title = advisorIsFemale_(advisor) ? "la profesora" : "el profesor";
+  const prefix = "Asesorados por " + title + ": ";
+  const paragraph = element.asParagraph();
+  paragraph.setText(prefix + advisorName + "\t\tDNI: " + clean_(advisor.dni));
+  if (advisorName) {
+    paragraph.editAsText().setBold(prefix.length, prefix.length + advisorName.length - 1, true);
+  }
+}
+
+function advisorIsFemale_(advisor) {
+  const explicitGender = normalize_((advisor || {}).gender);
+  if (["F", "FEMENINO", "MUJER", "PROFESORA", "ASESORA", "DRA", "DOCTORA"].indexOf(explicitGender) >= 0) return true;
+  if (["M", "MASCULINO", "HOMBRE", "PROFESOR", "ASESOR", "DR", "DOCTOR"].indexOf(explicitGender) >= 0) return false;
+
+  const normalizedName = removeDiacritics_(clean_((advisor || {}).name)).toUpperCase();
+  if (/\b(PROFESORA|ASESORA|DRA|DOCTORA|SRA|SENORA)\b/.test(normalizedName)) return true;
+  if (/\b(PROFESOR|ASESOR|DR|DOCTOR|SR|SENOR)\b/.test(normalizedName)) return false;
+
+  const givenNamePart = normalizedName.indexOf(",") >= 0
+    ? normalizedName.split(",").slice(1).join(" ")
+    : normalizedName;
+  const firstName = givenNamePart
+    .replace(/[^A-Z ]/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(function(part) { return ["DRA", "DOCTORA", "PROFESORA", "SRA", "SENORA"].indexOf(part) < 0; })[0] || "";
+  return FEMALE_ADVISOR_FIRST_NAMES.indexOf(firstName) >= 0;
 }
 
 function trimMemberTable_(body, memberCount) {
@@ -433,6 +473,11 @@ function buildColumnMap_(row) {
     title: headerIndex_(headers, function(header) { return header.indexOf("TITULOTENTATIVO") >= 0 || header.indexOf("TEMADELTRABAJO") >= 0; }),
     advisorDni: headerIndex_(headers, function(header) { return header === "DNIASESOR" || header === "DNIDELASESOR"; }),
     advisorName: headerIndex_(headers, function(header) { return header === "ASESOR" || header === "ASESORA" || header.indexOf("NOMBREDELASESOR") >= 0; }),
+    advisorGender: headerIndex_(headers, function(header) {
+      return header === "GENEROASESOR" || header === "GENERODELASESOR" ||
+        header === "SEXOASESOR" || header === "SEXODELASESOR" ||
+        header === "TRATAMIENTOASESOR" || header === "TRATAMIENTODELASESOR";
+    }),
     juror1Dni: headerIndex_(headers, function(header) { return header === "DNIJURADO1"; }),
     juror1Name: headerIndex_(headers, function(header) { return header === "JURADO1"; }),
     juror2Dni: headerIndex_(headers, function(header) { return header === "DNIJURADO2"; }),
