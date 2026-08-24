@@ -32,6 +32,10 @@ test("separa el consolidado por hojas de carrera y grupos", { skip: !workbookPat
   assert.equal(sample.year, "2026");
   assert.equal(sample.members.length, 4);
   assert.equal(sample.professionalTitle, "LICENCIADO (A) EN ADMINISTRACIÓN Y MARKETING");
+  assert.deepEqual(sample.advisor, {
+    name: "Estuardo Victor Lu Chang Say",
+    dni: "09303769",
+  });
   assert.deepEqual(sample.jurors, [
     { name: "Kety Lourdes Jauregui Machuca", dni: "08728982" },
     { name: "Jose Epifanio Ventura Egoavil", dni: "09849018" },

@@ -115,6 +115,7 @@ function parseWorkbook_(workbook) {
           year: "",
           professionalTitle: "",
           members: [],
+          advisor: { name: "", dni: "" },
           jurors: [{ name: "", dni: "" }, { name: "", dni: "" }],
         };
         groupOrder.push(key);
@@ -123,6 +124,8 @@ function parseWorkbook_(workbook) {
       const group = groupsByKey[key];
       group.actNumber = mergeFirst_(group.actNumber, valueAt_(row, columns.actNumber));
       group.title = mergeFirst_(group.title, valueAt_(row, columns.title));
+      group.advisor.name = mergeFirst_(group.advisor.name, valueAt_(row, columns.advisorName));
+      group.advisor.dni = mergeFirst_(group.advisor.dni, valueAt_(row, columns.advisorDni), function(value) { return identifier_(value, 8); });
       group.jurors[0].name = mergeFirst_(group.jurors[0].name, valueAt_(row, columns.juror1Name));
       group.jurors[0].dni = mergeFirst_(group.jurors[0].dni, valueAt_(row, columns.juror1Dni), function(value) { return identifier_(value, 8); });
       group.jurors[1].name = mergeFirst_(group.jurors[1].name, valueAt_(row, columns.juror2Name));
@@ -165,6 +168,7 @@ function parseWorkbook_(workbook) {
     if (group.members.some(function(member) { return !member.career || !member.studentCode || !member.dni || !member.startDate; })) {
       missing.push("datos completos de integrantes");
     }
+    if (!group.advisor.name || !group.advisor.dni) missing.push("asesor y DNI");
     if (group.jurors.some(function(juror) { return !juror.name || !juror.dni; })) missing.push("jurados y DNI");
     if (missing.length) errors.push(group.careerFolder + " · " + group.group + ": " + missing.join(", "));
   });
@@ -186,10 +190,13 @@ function generateAct_(periodFolder, group) {
   try {
     temporaryDoc = DriveApp.getFileById(TEMPLATE_ID).makeCopy("TEMP ACTA " + safeActNumber, wordsFolder);
     const document = DocumentApp.openById(temporaryDoc.getId());
+    const body = document.getBody();
     const replacements = replacementsFor_(group);
     Object.keys(replacements).forEach(function(marker) {
-      document.getBody().replaceText(escapeRegex_(marker), replacements[marker]);
+      body.replaceText(escapeRegex_(marker), replacements[marker]);
     });
+    fillAdvisor_(body, group.advisor || {});
+    trimMemberTable_(body, (group.members || []).length);
     const header = document.getHeader();
     if (header) header.replaceText(escapeRegex_("@@ACTA@@"), clean_(group.actNumber));
     document.saveAndClose();
@@ -209,6 +216,7 @@ function generateAct_(periodFolder, group) {
 
 function replacementsFor_(group) {
   const jurors = group.jurors || [];
+  const advisor = group.advisor || {};
   const values = {
     "@@FAC@@": clean_(group.faculty),
     "@@TITULO@@": clean_(group.title),
@@ -217,6 +225,8 @@ function replacementsFor_(group) {
     "@@MES@@": clean_(group.month),
     "@@ANIO@@": clean_(group.year),
     "@@PROF@@": clean_(group.professionalTitle),
+    "@@AN@@": clean_(advisor.name),
+    "@@AD@@": clean_(advisor.dni),
     "@@J1N@@": clean_((jurors[0] || {}).name),
     "@@J1D@@": clean_((jurors[0] || {}).dni),
     "@@J2N@@": clean_((jurors[1] || {}).name),
@@ -232,6 +242,41 @@ function replacementsFor_(group) {
     values["@@M" + number + "F@@"] = clean_(member.startDate);
   }
   return values;
+}
+
+function fillAdvisor_(body, advisor) {
+  const match = body.findText("Asesorados por el profesor:");
+  if (!match) throw new Error("La plantilla no contiene la línea del asesor.");
+
+  let element = match.getElement();
+  while (element && element.getType() !== DocumentApp.ElementType.PARAGRAPH) {
+    element = element.getParent();
+  }
+  if (!element) throw new Error("No se pudo ubicar el párrafo del asesor en la plantilla.");
+
+  element.asParagraph().setText(
+    "Asesorados por el profesor: " + clean_(advisor.name) + "\t\tDNI: " + clean_(advisor.dni)
+  );
+}
+
+function trimMemberTable_(body, memberCount) {
+  const tables = body.getTables();
+  let memberTable = null;
+  for (let index = 0; index < tables.length; index += 1) {
+    const table = tables[index];
+    if (!table.getNumRows()) continue;
+    const header = normalize_(table.getCell(0, 0).getText());
+    if (header.indexOf("APELLIDOSYNOMBRES") >= 0) {
+      memberTable = table;
+      break;
+    }
+  }
+  if (!memberTable) throw new Error("La plantilla no contiene la tabla de integrantes.");
+
+  const requiredRows = Number(memberCount || 0) + 1;
+  while (memberTable.getNumRows() > requiredRows) {
+    memberTable.removeRow(memberTable.getNumRows() - 1);
+  }
 }
 
 function upsertFile_(folder, name, blob) {
@@ -282,6 +327,8 @@ function buildColumnMap_(row) {
     careerCode: headerIndex_(headers, function(header) { return header === "CARRERASIGLADEACTA"; }),
     startDate: headerIndex_(headers, function(header) { return header === "FECHADEINICIODETRAMITE" || header === "FECHAINICIOTRAMITE"; }),
     title: headerIndex_(headers, function(header) { return header.indexOf("TITULOTENTATIVO") >= 0 || header.indexOf("TEMADELTRABAJO") >= 0; }),
+    advisorDni: headerIndex_(headers, function(header) { return header === "DNIASESOR" || header === "DNIDELASESOR"; }),
+    advisorName: headerIndex_(headers, function(header) { return header === "ASESOR" || header === "ASESORA" || header.indexOf("NOMBREDELASESOR") >= 0; }),
     juror1Dni: headerIndex_(headers, function(header) { return header === "DNIJURADO1"; }),
     juror1Name: headerIndex_(headers, function(header) { return header === "JURADO1"; }),
     juror2Dni: headerIndex_(headers, function(header) { return header === "DNIJURADO2"; }),

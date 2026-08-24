@@ -12,6 +12,11 @@ export type ActJuror = {
   dni: string;
 };
 
+export type ActAdvisor = {
+  name: string;
+  dni: string;
+};
+
 export type ActGroup = {
   group: string;
   careerFolder: string;
@@ -24,6 +29,7 @@ export type ActGroup = {
   year: string;
   professionalTitle: string;
   members: ActMember[];
+  advisor: ActAdvisor;
   jurors: [ActJuror, ActJuror];
 };
 
@@ -38,4 +44,3 @@ export type GenerationBatchResponse = {
   }>;
   error?: string;
 };
-

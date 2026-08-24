@@ -111,6 +111,8 @@ function buildColumnMap(row: Row) {
     careerCode: headerIndex(headers, (header) => header === "CARRERASIGLADEACTA"),
     startDate: headerIndex(headers, (header) => header === "FECHADEINICIODETRAMITE" || header === "FECHAINICIOTRAMITE"),
     title: headerIndex(headers, (header) => header.includes("TITULOTENTATIVO") || header.includes("TEMADELTRABAJO")),
+    advisorDni: headerIndex(headers, (header) => header === "DNIASESOR" || header === "DNIDELASESOR"),
+    advisorName: headerIndex(headers, (header) => header === "ASESOR" || header === "ASESORA" || header.includes("NOMBREDELASESOR")),
     juror1Dni: headerIndex(headers, (header) => header === "DNIJURADO1"),
     juror1Name: headerIndex(headers, (header) => header === "JURADO1"),
     juror2Dni: headerIndex(headers, (header) => header === "DNIJURADO2"),
@@ -160,11 +162,14 @@ export async function parseActasWorkbook(file: File): Promise<ActGroup[]> {
         year: "",
         professionalTitle: "",
         members: [],
+        advisor: { name: "", dni: "" },
         jurors: [{ name: "", dni: "" }, { name: "", dni: "" }],
       } satisfies ActGroup;
 
       existing.actNumber = mergeFirst(existing.actNumber, valueAt(row, columns.actNumber));
       existing.title = mergeFirst(existing.title, valueAt(row, columns.title));
+      existing.advisor.name = mergeFirst(existing.advisor.name, valueAt(row, columns.advisorName));
+      existing.advisor.dni = mergeFirst(existing.advisor.dni, valueAt(row, columns.advisorDni), (value) => identifier(value, 8));
       existing.jurors[0].name = mergeFirst(existing.jurors[0].name, valueAt(row, columns.juror1Name));
       existing.jurors[0].dni = mergeFirst(existing.jurors[0].dni, valueAt(row, columns.juror1Dni), (value) => identifier(value, 8));
       existing.jurors[1].name = mergeFirst(existing.jurors[1].name, valueAt(row, columns.juror2Name));
@@ -204,6 +209,7 @@ export async function parseActasWorkbook(file: File): Promise<ActGroup[]> {
     if (!group.members.length) missing.push("integrantes");
     if (group.members.length > 4) missing.push("máximo 4 integrantes");
     if (group.members.some((member) => !member.career || !member.studentCode || !member.dni || !member.startDate)) missing.push("datos completos de integrantes");
+    if (!group.advisor.name || !group.advisor.dni) missing.push("asesor y DNI");
     if (group.jurors.some((juror) => !juror.name || !juror.dni)) missing.push("jurados y DNI");
     if (missing.length) errors.push(`${group.careerFolder} · ${group.group}: ${missing.join(", ")}`);
   }
