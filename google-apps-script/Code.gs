@@ -61,10 +61,26 @@ function analyzeWorkbook(base64Data, fileName) {
   }
 }
 
-function generateBatch(period, groups) {
-  if (!/^\d{4}-[12]$/.test(String(period || ""))) {
-    throw new Error("El período debe usar el formato 2025-2.");
+function prepareGeneration(period, careerNames) {
+  validatePeriod_(period);
+  if (!Array.isArray(careerNames) || !careerNames.length) {
+    throw new Error("No se recibieron carreras para preparar las carpetas.");
   }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const rootFolder = DriveApp.getFolderById(ROOT_FOLDER_ID);
+    const periodFolder = ensureGenerationStructure_(rootFolder, period, careerNames);
+    console.log("Estructura preparada: " + period + " · " + careerNames.length + " carreras");
+    return { periodUrl: periodFolder.getUrl(), careerCount: careerNames.length };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function generateBatch(period, groups) {
+  validatePeriod_(period);
   if (!Array.isArray(groups) || !groups.length || groups.length > 3) {
     throw new Error("El lote de actas no tiene el formato esperado.");
   }
@@ -77,10 +93,41 @@ function generateBatch(period, groups) {
     const results = groups.map(function(group) {
       return generateAct_(periodFolder, group);
     });
+    console.log("Lote generado: " + period + " · " + results.length + " actas");
     return { periodUrl: periodFolder.getUrl(), results: results };
   } finally {
     lock.releaseLock();
   }
+}
+
+function verifyGeneration(period, expectedFiles) {
+  validatePeriod_(period);
+  if (!Array.isArray(expectedFiles) || !expectedFiles.length) {
+    throw new Error("No se recibieron actas para verificar.");
+  }
+
+  const rootFolder = DriveApp.getFolderById(ROOT_FOLDER_ID);
+  const periodFolder = findFolder_(rootFolder, period);
+  if (!periodFolder) throw new Error("Drive no confirmó la carpeta del período " + period + ".");
+
+  const missing = [];
+  expectedFiles.forEach(function(item) {
+    const careerName = safeFolderName_(item.careerFolder);
+    const careerFolder = findFolder_(periodFolder, careerName);
+    const wordsFolder = careerFolder ? findFolder_(careerFolder, "WORDS") : null;
+    const pdfsFolder = careerFolder ? findFolder_(careerFolder, "PDFS") : null;
+    const safeActNumber = safeFilePart_(item.actNumber);
+    const wordName = "ACTA N° " + safeActNumber + ".docx";
+    const pdfName = "ACTA N° " + safeActNumber + ".pdf";
+    if (!wordsFolder || !wordsFolder.getFilesByName(wordName).hasNext()) missing.push(careerName + "/WORDS/" + wordName);
+    if (!pdfsFolder || !pdfsFolder.getFilesByName(pdfName).hasNext()) missing.push(careerName + "/PDFS/" + pdfName);
+  });
+
+  if (missing.length) {
+    throw new Error("Drive no confirmó todos los archivos. Faltan: " + missing.slice(0, 4).join("; ") + (missing.length > 4 ? "; …" : ""));
+  }
+  console.log("Generación verificada: " + period + " · " + expectedFiles.length + " actas");
+  return { periodUrl: periodFolder.getUrl(), verifiedCount: expectedFiles.length };
 }
 
 function parseWorkbook_(workbook) {
@@ -409,9 +456,33 @@ function facultyFor_(sheetName) {
   return FACULTIES[normalize_(sheetName)] || "Facultad de Ciencias Económicas y Administrativas";
 }
 
-function getOrCreateFolder_(parent, name) {
+function validatePeriod_(period) {
+  if (!/^\d{4}-[12]$/.test(String(period || ""))) {
+    throw new Error("El período debe usar el formato 2025-2.");
+  }
+}
+
+function ensureGenerationStructure_(rootFolder, period, careerNames) {
+  const periodFolder = getOrCreateFolder_(rootFolder, period);
+  const created = {};
+  careerNames.forEach(function(careerName) {
+    const safeName = safeFolderName_(careerName);
+    if (created[safeName]) return;
+    const careerFolder = getOrCreateFolder_(periodFolder, safeName);
+    getOrCreateFolder_(careerFolder, "WORDS");
+    getOrCreateFolder_(careerFolder, "PDFS");
+    created[safeName] = true;
+  });
+  return periodFolder;
+}
+
+function findFolder_(parent, name) {
   const folders = parent.getFoldersByName(name);
-  return folders.hasNext() ? folders.next() : parent.createFolder(name);
+  return folders.hasNext() ? folders.next() : null;
+}
+
+function getOrCreateFolder_(parent, name) {
+  return findFolder_(parent, name) || parent.createFolder(name);
 }
 
 function normalize_(value) {

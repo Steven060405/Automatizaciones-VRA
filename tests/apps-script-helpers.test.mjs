@@ -4,6 +4,7 @@ import vm from "node:vm";
 import test from "node:test";
 
 const source = await readFile(new URL("../google-apps-script/Code.gs", import.meta.url), "utf8");
+const indexSource = await readFile(new URL("../google-apps-script/Index.html", import.meta.url), "utf8");
 const context = vm.createContext({
   console,
   DocumentApp: { ElementType: { PAGE_BREAK: "PAGE_BREAK", PARAGRAPH: "PARAGRAPH" } },
@@ -97,4 +98,49 @@ test("mantiene el recuadro y las observaciones juntos en la segunda hoja", () =>
 
   assert.equal(insertions, 1);
   assert.deepEqual(insertionIndexes, [1]);
+});
+
+test("crea primero el período y las carpetas de cada carrera", () => {
+  function folder(name) {
+    const children = new Map();
+    return {
+      name,
+      children,
+      getFoldersByName(childName) {
+        const child = children.get(childName);
+        let available = Boolean(child);
+        return {
+          hasNext: () => available,
+          next: () => {
+            available = false;
+            return child;
+          },
+        };
+      },
+      createFolder(childName) {
+        const child = folder(childName);
+        children.set(childName, child);
+        return child;
+      },
+    };
+  }
+
+  const root = folder("root");
+  const period = context.ensureGenerationStructure_(root, "2026-1", ["DERECHO", "ING", "DERECHO"]);
+
+  assert.equal(period.name, "2026-1");
+  assert.deepEqual(Array.from(period.children.keys()), ["DERECHO", "ING"]);
+  for (const career of period.children.values()) {
+    assert.deepEqual(Array.from(career.children.keys()), ["WORDS", "PDFS"]);
+  }
+});
+
+test("prepara las carpetas antes de generar y verifica los archivos al final", () => {
+  const preparePosition = indexSource.indexOf(".prepareGeneration(period, careers)");
+  const batchPosition = indexSource.indexOf(".generateBatch(period, batch)");
+  const verifyPosition = indexSource.indexOf(".verifyGeneration(period, expected)");
+
+  assert.ok(preparePosition > 0);
+  assert.ok(batchPosition > 0);
+  assert.ok(verifyPosition > batchPosition);
 });

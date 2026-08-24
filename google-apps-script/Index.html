@@ -186,22 +186,44 @@
     function generateGroups(period, groups){
       if (!groups || !groups.length) return finishError('No se encontraron grupos válidos en el Excel.');
       const results = []; let periodUrl = ''; const size = 3;
-      setProgress(15, 'Se encontraron ' + groups.length + ' grupos');
+      const careers = Array.from(new Set(groups.map(function(group){ return group.careerFolder; })));
+      setProgress(15, 'Preparando la carpeta ' + period + ' y sus carreras');
+
       function next(start){
-        if (start >= groups.length) return finishSuccess(period, periodUrl, results.length, groups);
+        if (start >= groups.length) return verifyFiles();
         const batch = groups.slice(start, start + size); const end = Math.min(start + batch.length, groups.length);
-        setProgress(18 + Math.round((start / groups.length) * 78), 'Generando actas ' + (start + 1) + '–' + end + ' de ' + groups.length);
+        setProgress(22 + Math.round((start / groups.length) * 70), 'Generando actas ' + (start + 1) + '–' + end + ' de ' + groups.length);
         google.script.run
           .withSuccessHandler(function(response){
             periodUrl = response.periodUrl || periodUrl;
             Array.prototype.push.apply(results, response.results || []);
-            setProgress(18 + Math.round((end / groups.length) * 78), 'Actas ' + (start + 1) + '–' + end + ' confirmadas en Drive');
+            setProgress(22 + Math.round((end / groups.length) * 70), 'Actas ' + (start + 1) + '–' + end + ' guardadas en Drive');
             next(end);
           })
           .withFailureHandler(function(error){ finishError(error && error.message ? error.message : String(error)); })
           .generateBatch(period, batch);
       }
-      next(0);
+
+      function verifyFiles(){
+        setProgress(95, 'Verificando carpetas, Word y PDF en Drive');
+        const expected = groups.map(function(group){ return { careerFolder: group.careerFolder, actNumber: group.actNumber }; });
+        google.script.run
+          .withSuccessHandler(function(response){
+            periodUrl = response.periodUrl || periodUrl;
+            finishSuccess(period, periodUrl, response.verifiedCount || results.length, groups);
+          })
+          .withFailureHandler(function(error){ finishError(error && error.message ? error.message : String(error)); })
+          .verifyGeneration(period, expected);
+      }
+
+      google.script.run
+        .withSuccessHandler(function(response){
+          periodUrl = response.periodUrl || '';
+          setProgress(20, careers.length + ' carpetas de carrera preparadas');
+          next(0);
+        })
+        .withFailureHandler(function(error){ finishError(error && error.message ? error.message : String(error)); })
+        .prepareGeneration(period, careers);
     }
 
     function finishSuccess(period, periodUrl, count, groups){
