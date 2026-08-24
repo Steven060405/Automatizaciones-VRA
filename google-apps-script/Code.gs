@@ -257,8 +257,9 @@ function generateAct_(periodFolder, group) {
       body.replaceText(escapeRegex_(marker), replacements[marker]);
     });
     fillAdvisor_(body, group.advisor || {});
-    trimMemberTable_(body, (group.members || []).length);
-    placeObservationsOnSecondPage_(body);
+    const memberCount = (group.members || []).length;
+    trimMemberTable_(body, memberCount);
+    placeObservationsOnSecondPage_(body, memberCount);
     const header = document.getHeader();
     if (header) header.replaceText(escapeRegex_("@@ACTA@@"), clean_(group.actNumber));
     document.saveAndClose();
@@ -341,7 +342,9 @@ function trimMemberTable_(body, memberCount) {
   }
 }
 
-function placeObservationsOnSecondPage_(body) {
+function placeObservationsOnSecondPage_(body, memberCount) {
+  if (!shouldForceObservationsPageBreak_(memberCount)) return;
+
   const match = body.findText("SIN OBSERVACIONES / RECOMENDACIONES");
   if (!match) throw new Error("La plantilla no contiene la sección de observaciones.");
 
@@ -367,6 +370,10 @@ function placeObservationsOnSecondPage_(body) {
     paragraphHasPageBreak_(beforeSection.asParagraph())
   );
   if (!alreadySeparated) body.insertPageBreak(sectionStartIndex);
+}
+
+function shouldForceObservationsPageBreak_(memberCount) {
+  return Number(memberCount || 0) < 4;
 }
 
 function paragraphHasPageBreak_(paragraph) {

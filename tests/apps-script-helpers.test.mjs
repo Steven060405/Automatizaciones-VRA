@@ -100,6 +100,23 @@ test("mantiene el recuadro y las observaciones juntos en la segunda hoja", () =>
   assert.deepEqual(insertionIndexes, [1]);
 });
 
+test("no agrega una hoja vacía cuando el grupo tiene cuatro alumnos", () => {
+  let searches = 0;
+  const body = {
+    findText: () => {
+      searches += 1;
+      return null;
+    },
+  };
+
+  context.placeObservationsOnSecondPage_(body, 4);
+
+  assert.equal(context.shouldForceObservationsPageBreak_(2), true);
+  assert.equal(context.shouldForceObservationsPageBreak_(3), true);
+  assert.equal(context.shouldForceObservationsPageBreak_(4), false);
+  assert.equal(searches, 0);
+});
+
 test("crea primero el período y las carpetas de cada carrera", () => {
   function folder(name) {
     const children = new Map();
