@@ -3,6 +3,10 @@ const TEMPLATE_ID = "1pKUqz_VZ2avh5X-5FSFMUiEKfD87Y8DXCM19du0uIEQ";
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const GOOGLE_SHEETS_MIME = "application/vnd.google-apps.spreadsheet";
+const AUTHORIZED_EMAILS = [
+  "sespinoza@esan.edu.pe",
+  "gespinozar822@gmail.com",
+];
 
 const MONTHS = {
   ENERO: "enero", FEBRERO: "febrero", MARZO: "marzo", ABRIL: "abril",
@@ -43,6 +47,13 @@ const FEMALE_ADVISOR_FIRST_NAMES = [
 ];
 
 function doGet() {
+  const email = activeUserEmail_();
+  if (!isAuthorizedEmail_(email)) {
+    return HtmlService.createHtmlOutput(unauthorizedHtml_(email))
+      .setTitle("Acceso no autorizado | Automatizaciones del VRA")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
   const output = HtmlService.createHtmlOutputFromFile("Index");
   const html = output.getContent();
   if (!/^\s*<!doctype html>/i.test(html) || html.indexOf('data-person="Ingrid Zarate"') < 0) {
@@ -54,10 +65,11 @@ function doGet() {
 }
 
 function getUserEmail() {
-  return Session.getActiveUser().getEmail() || "Cuenta de Google autorizada";
+  return requireAuthorizedUser_();
 }
 
 function analyzeWorkbook(base64Data, fileName) {
+  requireAuthorizedUser_();
   if (!/\.xlsx$/i.test(String(fileName || ""))) {
     throw new Error("El consolidado debe estar en formato .xlsx.");
   }
@@ -81,6 +93,7 @@ function analyzeWorkbook(base64Data, fileName) {
 }
 
 function preparePeriod(period) {
+  requireAuthorizedUser_();
   validatePeriod_(period);
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
@@ -95,6 +108,7 @@ function preparePeriod(period) {
 }
 
 function prepareGeneration(period, careerNames) {
+  requireAuthorizedUser_();
   validatePeriod_(period);
   if (!Array.isArray(careerNames) || !careerNames.length) {
     throw new Error("No se recibieron carreras para preparar las carpetas.");
@@ -113,6 +127,7 @@ function prepareGeneration(period, careerNames) {
 }
 
 function generateBatch(period, groups) {
+  requireAuthorizedUser_();
   validatePeriod_(period);
   if (!Array.isArray(groups) || !groups.length || groups.length > 3) {
     throw new Error("El lote de actas no tiene el formato esperado.");
@@ -134,6 +149,7 @@ function generateBatch(period, groups) {
 }
 
 function verifyGeneration(period, expectedFiles) {
+  requireAuthorizedUser_();
   validatePeriod_(period);
   if (!Array.isArray(expectedFiles) || !expectedFiles.length) {
     throw new Error("No se recibieron actas para verificar.");
@@ -161,6 +177,50 @@ function verifyGeneration(period, expectedFiles) {
   }
   console.log("Generación verificada: " + period + " · " + expectedFiles.length + " actas");
   return { periodUrl: periodFolder.getUrl(), verifiedCount: expectedFiles.length };
+}
+
+function activeUserEmail_() {
+  return clean_(Session.getActiveUser().getEmail()).toLowerCase();
+}
+
+function isAuthorizedEmail_(email) {
+  return AUTHORIZED_EMAILS.indexOf(clean_(email).toLowerCase()) >= 0;
+}
+
+function requireAuthorizedUser_() {
+  const email = activeUserEmail_();
+  if (!isAuthorizedEmail_(email)) {
+    throw new Error("Esta cuenta de Google no está autorizada para usar Automatizaciones del VRA.");
+  }
+  return email;
+}
+
+function unauthorizedHtml_(email) {
+  const account = email
+    ? "La cuenta <strong>" + escapeHtml_(email) + "</strong> no está incluida en la lista de acceso."
+    : "Google no pudo identificar el correo de la cuenta activa.";
+  return '<!doctype html><html lang="es"><head><base target="_top"><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1"><style>' +
+    ':root{--guindo:#7a1730;--tinta:#271a1f;--suave:#75686d;--borde:#e5dadd}' +
+    '*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;' +
+    'background:radial-gradient(circle at 80% 10%,#f0dce2 0,transparent 30%),#f8f4f5;' +
+    'font-family:Arial,Helvetica,sans-serif;color:var(--tinta)}main{width:min(520px,100%);padding:38px;' +
+    'border:1px solid var(--borde);border-radius:24px;background:#fff;box-shadow:0 22px 70px rgba(78,20,37,.12);text-align:center}' +
+    '.mark{width:54px;height:54px;margin:0 auto 20px;display:grid;place-items:center;border-radius:16px;' +
+    'background:var(--guindo);color:#fff;font-weight:900;font-size:22px}h1{margin:0;font-size:30px;letter-spacing:-.04em}' +
+    'p{margin:15px 0 0;color:var(--suave);font-size:14px;line-height:1.6}strong{color:var(--tinta)}' +
+    '.note{margin-top:22px;padding:14px;border-radius:13px;background:#f8eef1;color:var(--guindo);font-size:12px}' +
+    '</style></head><body><main><div class="mark">A</div><h1>Acceso no autorizado</h1><p>' + account + '</p>' +
+    '<p class="note">Ingresa con una cuenta autorizada por el Vicerrectorado Académico.</p></main></body></html>';
+}
+
+function escapeHtml_(value) {
+  return clean_(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function parseWorkbook_(workbook) {

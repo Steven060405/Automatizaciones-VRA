@@ -23,6 +23,7 @@ test("renderiza el acceso institucional del VRA", async () => {
   assert.match(html, /<title>Automatizaciones del VRA<\/title>/i);
   assert.match(html, /ACCESO CON GOOGLE/);
   assert.match(html, /Ingresar con Google/);
+  assert.match(html, /Acceso restringido a las cuentas autorizadas por el VRA/);
   assert.match(html, /script\.google\.com\/macros\/s\//);
   assert.doesNotMatch(html, /name="username"|type="password"/);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site/);

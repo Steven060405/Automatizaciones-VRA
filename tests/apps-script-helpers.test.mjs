@@ -217,3 +217,18 @@ test("impide publicar código fuente como si fuera la interfaz", () => {
   assert.match(source, /!\/\^\\s\*<!doctype html>\/i\.test\(html\)/);
   assert.match(source, /data-person="Ingrid Zarate"/);
 });
+
+test("permite únicamente los dos correos autorizados", () => {
+  assert.equal(context.isAuthorizedEmail_("sespinoza@esan.edu.pe"), true);
+  assert.equal(context.isAuthorizedEmail_("GESPINOZAR822@GMAIL.COM"), true);
+  assert.equal(context.isAuthorizedEmail_("otro@esan.edu.pe"), false);
+  assert.match(source, /const AUTHORIZED_EMAILS = \[/);
+  assert.match(source, /Acceso no autorizado/);
+});
+
+test("protege todas las operaciones públicas de generación", () => {
+  for (const functionName of ["getUserEmail", "analyzeWorkbook", "preparePeriod", "prepareGeneration", "generateBatch", "verifyGeneration"]) {
+    const guardedFunction = new RegExp(`function ${functionName}\\([^)]*\\) \\{\\s*(?:return )?requireAuthorizedUser_\\(\\);`);
+    assert.match(source, guardedFunction);
+  }
+});

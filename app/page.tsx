@@ -11,7 +11,7 @@ export default function Home() {
         <div className="login-brand"><span>A</span><div><strong>Vicerrectorado Académico</strong><small>Universidad ESAN</small></div></div>
         <div className="login-heading"><p>ACCESO CON GOOGLE</p><h1>Automatizaciones del VRA</h1><span>Ingresa con la cuenta de Google que utilizará las carpetas de Drive.</span></div>
         <a className="google-login" href={GOOGLE_APP_URL}><span aria-hidden="true">G</span>Ingresar con Google</a>
-        <p className="google-login-note">La cuenta debe tener permiso de <b>Editor</b> en la carpeta “GENERACIÓN DE ACTAS FINAL”.</p>
+        <p className="google-login-note">Acceso restringido a las cuentas autorizadas por el VRA. La cuenta también debe tener permiso de <b>Editor</b> en la carpeta “GENERACIÓN DE ACTAS FINAL”.</p>
         <footer><span><i />Acceso protegido por Google</span><small>No guardamos tu contraseña</small></footer>
       </section>
     </main>
