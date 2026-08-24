@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{--ink:#172126;--muted:#66757b;--line:#dce4e1;--paper:#f5f7f4;--green:#0a6b58;--green2:#0f8b72;--lime:#dff16c;--white:#fff;--danger:#a83a32}
+    *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+    button,input{font:inherit} a{color:inherit}.shell{min-height:100vh;background:radial-gradient(circle at 85% 5%,#dbeee7 0,transparent 27%),var(--paper)}
+    header{height:74px;padding:0 5vw;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:rgba(255,255,255,.88)}
+    .brand{display:flex;gap:12px;align-items:center}.brand-mark{width:38px;height:38px;display:grid;place-items:center;background:var(--ink);color:var(--lime);font-weight:900;border-radius:11px}.brand strong{display:block;font-size:14px}.brand small{color:var(--muted)}
+    .account{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 13px}.account i{width:8px;height:8px;border-radius:50%;background:#22a06b}
+    main{width:min(1180px,90vw);margin:0 auto;padding:54px 0 72px}.eyebrow{color:var(--green);font-size:12px;letter-spacing:.16em;font-weight:800;margin:0 0 12px}
+    h1{font-size:clamp(34px,5vw,64px);line-height:.98;letter-spacing:-.055em;margin:0;max-width:760px}.lead{color:var(--muted);font-size:17px;line-height:1.6;max-width:700px;margin:20px 0 34px}
+    .people{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px}.person{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;display:flex;align-items:center;gap:14px}.avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#e0eee9;color:var(--green);font-weight:900}.person strong{display:block;font-size:14px}.person small{color:var(--muted);font-size:12px}
+    .workspace{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(270px,.7fr);gap:22px;align-items:start}.panel{background:#fff;border:1px solid var(--line);border-radius:26px;box-shadow:0 18px 60px rgba(25,52,45,.08)}
+    .generator{padding:28px}.generator-head{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:24px}.generator-head h2,.guide h2{font-size:25px;letter-spacing:-.03em;margin:4px 0 7px}.generator-head p,.guide>p{color:var(--muted);line-height:1.5;margin:0;font-size:14px}.badge{white-space:nowrap;background:#edf7f2;color:var(--green);border-radius:999px;padding:9px 12px;font-size:11px;font-weight:800}
+    label.field{display:block;margin:0 0 16px}.field span{display:block;font-size:12px;font-weight:800;margin-bottom:7px}.field input{width:100%;height:48px;border:1px solid var(--line);border-radius:12px;padding:0 14px;outline:0;background:#fbfcfb}.field input:focus{border-color:var(--green2);box-shadow:0 0 0 3px rgba(15,139,114,.12)}
+    .file{border:1px dashed #a9bbb5;border-radius:16px;padding:17px;display:flex;align-items:center;gap:14px;cursor:pointer;background:#fbfcfb;margin-bottom:16px}.file:hover{border-color:var(--green2)}.file input{position:absolute;opacity:0;pointer-events:none}.file-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:#e4f3ed;color:var(--green);font-size:11px;font-weight:900}.file-copy{min-width:0;flex:1}.file-copy strong,.file-copy small{display:block}.file-copy strong{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.file-copy small{font-size:11px;color:var(--muted);margin-top:3px}.file b{font-size:12px;color:var(--green)}
+    .template{display:flex;gap:12px;align-items:center;background:#f4f7f5;border-radius:14px;padding:14px;margin-bottom:18px}.template span{width:38px;height:38px;display:grid;place-items:center;background:var(--ink);color:#fff;border-radius:9px;font-size:10px;font-weight:900}.template strong,.template small{display:block}.template strong{font-size:12px}.template small{font-size:10px;color:var(--muted);margin-top:3px}
+    .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}.actions button{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer}.actions .clear{background:#edf1ef;color:var(--ink)}.actions .run{background:var(--green);color:#fff}.actions button:disabled{opacity:.55;cursor:not-allowed}
+    .message{border-radius:15px;padding:15px;margin:15px 0}.processing{background:#eef7f3}.meta{display:flex;justify-content:space-between;gap:12px;margin-bottom:10px}.meta small,.meta strong{display:block}.meta small{font-size:9px;color:var(--green);font-weight:900;letter-spacing:.12em}.meta strong{font-size:13px;margin-top:4px}.meta b{font-size:15px;color:var(--green)}.track{height:8px;background:#d8e8e2;border-radius:99px;overflow:hidden}.track span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),#36aa86);transition:width .3s ease}.processing p{font-size:11px;color:var(--muted);margin:9px 0 0}
+    .error{background:#fff0ee;color:#7c2d27;border:1px solid #f0c8c3}.error strong{display:block;margin-bottom:5px}.error p{font-size:12px;line-height:1.45;margin:0}.error ul{font-size:11px;line-height:1.45;margin:9px 0 0;padding-left:18px}.done{background:#eaf7f1;border:1px solid #c5e8d9}.done strong{display:block;color:var(--green);margin-bottom:5px}.done p{font-size:12px;color:#435851;line-height:1.45}.done a{display:inline-block;margin-top:7px;background:var(--green);color:#fff;text-decoration:none;border-radius:10px;padding:10px 13px;font-size:12px;font-weight:800}
+    .guide{padding:25px;position:sticky;top:22px}.steps{list-style:none;margin:20px 0 0;padding:0}.steps li{display:flex;gap:12px;padding:13px 0;border-top:1px solid var(--line)}.steps span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--lime);font-size:10px;font-weight:900}.steps strong,.steps small{display:block}.steps strong{font-size:12px}.steps small{font-size:11px;color:var(--muted);line-height:1.4;margin-top:3px}.note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:18px;padding:13px;background:#f4f7f5;border-radius:12px}
+    .hidden{display:none!important}
+    @media(max-width:850px){header{padding:0 4vw}.account span{display:none}main{width:92vw;padding-top:35px}.people,.workspace{grid-template-columns:1fr}.guide{position:static}.generator-head{display:block}.badge{display:inline-block;margin-top:12px}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand"><span class="brand-mark">A</span><div><strong>Vicerrectorado Académico</strong><small>Universidad ESAN</small></div></div>
+      <div class="account"><i></i><span id="accountLabel">Cuenta de Google autorizada</span></div>
+    </header>
+    <main>
+      <p class="eyebrow">ECOSISTEMA DE AUTOMATIZACIONES</p>
+      <h1>Automatizaciones del VRA</h1>
+      <p class="lead">Procesos académicos conectados con Google Drive. Los documentos se generan con la cuenta de Google que autorizó el acceso.</p>
+
+      <section class="people" aria-label="Responsables">
+        <article class="person"><span class="avatar">AT</span><div><strong>Aisha Tizón</strong><small>Multitareas</small></div></article>
+        <article class="person"><span class="avatar">IZ</span><div><strong>Ingrid Zarate</strong><small>Cursos de actualización</small></div></article>
+        <article class="person"><span class="avatar">KJ</span><div><strong>Profesora Kety Jauregui</strong><small>Vicerrectora Académica</small></div></article>
+      </section>
+
+      <section class="workspace">
+        <form class="panel generator" id="generationForm">
+          <div class="generator-head"><div><p class="eyebrow">AUTOMATIZACIÓN ACTIVA</p><h2>Generación de actas</h2><p>Lee todas las hojas del consolidado y organiza cada grupo por período y carrera.</p></div><span class="badge">GOOGLE DRIVE</span></div>
+
+          <label class="field"><span>PERÍODO ACADÉMICO</span><input id="period" name="period" inputmode="numeric" placeholder="Ejemplo: 2025-2" maxlength="6" required></label>
+          <label class="file" for="workbook"><input id="workbook" type="file" accept=".xlsx" required><span class="file-icon">XLS</span><span class="file-copy"><strong id="fileName">Seleccionar consolidado Excel</strong><small id="fileMeta">Formato admitido: .xlsx</small></span><b>Examinar</b></label>
+          <div class="template"><span>DOC</span><div><strong>Plantilla institucional de sustentación presencial</strong><small>Genera Word y PDF; la nota queda vacía para el profesor.</small></div></div>
+
+          <div id="processing" class="message processing hidden" aria-live="polite">
+            <div class="meta"><div><small>PROCESANDO CONSOLIDADO</small><strong id="processingText">Leyendo el Excel</strong></div><b id="progressNumber">4%</b></div>
+            <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100"><span id="progressBar"></span></div><p>No cierres esta pantalla mientras se crean los documentos.</p>
+          </div>
+          <div id="errorBox" class="message error hidden" role="alert"><strong>No se pudo completar el proceso</strong><p id="errorText"></p><ul><li>Comprueba que tu cuenta tenga permiso de Editor en la carpeta principal.</li><li>Si Google bloquea la autorización, solicita al administrador permitir Apps Script y Drive.</li><li>Puedes volver a procesar el Excel; los archivos existentes se actualizan sin duplicarse.</li></ul></div>
+          <div id="doneBox" class="message done hidden"><strong id="doneTitle">Proceso finalizado</strong><p id="doneText"></p><a id="driveLink" href="#" target="_blank" rel="noopener">Abrir carpeta del período →</a></div>
+
+          <div class="actions"><button type="button" class="clear" id="clearButton">Limpiar</button><button type="submit" class="run" id="runButton">Procesar consolidado →</button></div>
+        </form>
+
+        <aside class="panel guide">
+          <p class="eyebrow">DISTRIBUCIÓN AUTOMÁTICA</p><h2>Qué hará con el Excel</h2><p>Cada hoja se considera una carrera y cada N° de grupo produce un acta.</p>
+          <ol class="steps">
+            <li><span>01</span><div><strong>Ubica el período</strong><small>Si no existe, crea la carpeta automáticamente.</small></div></li>
+            <li><span>02</span><div><strong>Separa por carrera</strong><small>Usa los nombres exactos de las hojas del Excel.</small></div></li>
+            <li><span>03</span><div><strong>Crea WORDS y PDFS</strong><small>Ambas carpetas se crean dentro de cada carrera.</small></div></li>
+            <li><span>04</span><div><strong>Evita duplicados</strong><small>El N° de acta identifica y actualiza el documento existente.</small></div></li>
+          </ol>
+          <p class="note">La cuenta conectada necesita permiso de <b>Editor</b> en “GENERACIÓN DE ACTAS FINAL”. No se guarda tu contraseña.</p>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const form = document.getElementById('generationForm');
+    const periodInput = document.getElementById('period');
+    const workbookInput = document.getElementById('workbook');
+    const runButton = document.getElementById('runButton');
+    const clearButton = document.getElementById('clearButton');
+    const processing = document.getElementById('processing');
+    const errorBox = document.getElementById('errorBox');
+    const doneBox = document.getElementById('doneBox');
+    const progressBar = document.getElementById('progressBar');
+    const progressNumber = document.getElementById('progressNumber');
+    const processingText = document.getElementById('processingText');
+    let running = false;
+
+    google.script.run.withSuccessHandler(function(email){
+      document.getElementById('accountLabel').textContent = email || 'Cuenta de Google autorizada';
+    }).getUserEmail();
+
+    workbookInput.addEventListener('change', function(){
+      const file = workbookInput.files[0];
+      document.getElementById('fileName').textContent = file ? file.name : 'Seleccionar consolidado Excel';
+      document.getElementById('fileMeta').textContent = file ? Math.round(file.size / 1024) + ' KB · archivo preparado' : 'Formato admitido: .xlsx';
+      hideMessages();
+    });
+
+    clearButton.addEventListener('click', function(){
+      if (running) return;
+      form.reset(); hideMessages(); setProgress(0, 'Leyendo el Excel');
+      document.getElementById('fileName').textContent = 'Seleccionar consolidado Excel';
+      document.getElementById('fileMeta').textContent = 'Formato admitido: .xlsx';
+    });
+
+    form.addEventListener('submit', function(event){
+      event.preventDefault();
+      const period = periodInput.value.trim();
+      const file = workbookInput.files[0];
+      if (!/^\d{4}-[12]$/.test(period)) return showError('Escribe el período con el formato 2025-2.');
+      if (!file || !/\.xlsx$/i.test(file.name)) return showError('Selecciona el consolidado en formato .xlsx.');
+      if (file.size > 8 * 1024 * 1024) return showError('El archivo supera 8 MB. Reduce su tamaño antes de procesarlo.');
+
+      running = true; runButton.disabled = true; clearButton.disabled = true; workbookInput.disabled = true; periodInput.disabled = true;
+      hideMessages(); processing.classList.remove('hidden'); setProgress(4, 'Leyendo las hojas del consolidado');
+      const reader = new FileReader();
+      reader.onerror = function(){ finishError('No se pudo leer el archivo seleccionado.'); };
+      reader.onload = function(){
+        const base64 = String(reader.result || '').split(',')[1] || '';
+        google.script.run
+          .withSuccessHandler(function(groups){ generateGroups(period, groups); })
+          .withFailureHandler(function(error){ finishError(error && error.message ? error.message : String(error)); })
+          .analyzeWorkbook(base64, file.name);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function generateGroups(period, groups){
+      if (!groups || !groups.length) return finishError('No se encontraron grupos válidos en el Excel.');
+      const results = []; let periodUrl = ''; const size = 3;
+      setProgress(15, 'Se encontraron ' + groups.length + ' grupos');
+      function next(start){
+        if (start >= groups.length) return finishSuccess(period, periodUrl, results.length, groups);
+        const batch = groups.slice(start, start + size); const end = Math.min(start + batch.length, groups.length);
+        setProgress(18 + Math.round((start / groups.length) * 78), 'Generando actas ' + (start + 1) + '–' + end + ' de ' + groups.length);
+        google.script.run
+          .withSuccessHandler(function(response){
+            periodUrl = response.periodUrl || periodUrl;
+            Array.prototype.push.apply(results, response.results || []);
+            setProgress(18 + Math.round((end / groups.length) * 78), 'Actas ' + (start + 1) + '–' + end + ' confirmadas en Drive');
+            next(end);
+          })
+          .withFailureHandler(function(error){ finishError(error && error.message ? error.message : String(error)); })
+          .generateBatch(period, batch);
+      }
+      next(0);
+    }
+
+    function finishSuccess(period, periodUrl, count, groups){
+      setProgress(100, 'Word y PDF verificados en Drive'); processing.classList.add('hidden'); doneBox.classList.remove('hidden');
+      const careers = new Set(groups.map(function(group){ return group.careerFolder; })).size;
+      document.getElementById('doneTitle').textContent = count + ' actas generadas en ' + careers + ' carreras';
+      document.getElementById('doneText').textContent = 'Los Word y PDF están en la carpeta ' + period + '. Los N° de acta existentes fueron actualizados para evitar duplicados.';
+      document.getElementById('driveLink').href = periodUrl;
+      unlock(); runButton.disabled = true;
+    }
+
+    function finishError(message){ processing.classList.add('hidden'); showError(message); unlock(); }
+    function unlock(){ running = false; runButton.disabled = false; clearButton.disabled = false; workbookInput.disabled = false; periodInput.disabled = false; }
+    function showError(message){ hideMessages(); errorBox.classList.remove('hidden'); document.getElementById('errorText').textContent = message; }
+    function hideMessages(){ errorBox.classList.add('hidden'); doneBox.classList.add('hidden'); processing.classList.add('hidden'); }
+    function setProgress(value, text){ progressBar.style.width = value + '%'; progressNumber.textContent = value + '%'; processingText.textContent = text; }
+  </script>
+</body>
+</html>

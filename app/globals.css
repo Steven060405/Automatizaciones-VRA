@@ -409,6 +409,10 @@ button { font: inherit; }
 .login-card form > button { height: 44px; margin-top: 3px; border: 0; border-radius: 10px; background: #a01931; color: white; cursor: pointer; font-size: 10px; font-weight: 800; box-shadow: 0 9px 22px rgba(160,25,49,.2); }
 .login-card form > button:hover { background: #861328; }
 .login-card form > button:disabled { cursor: wait; opacity: .68; }
+.google-login { min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 10px; background: #172630; color: white; text-decoration: none; font-size: 10px; font-weight: 800; box-shadow: 0 9px 22px rgba(23,38,48,.18); }
+.google-login:hover { background: #0c171d; }
+.google-login > span { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: white; color: #4285f4; font-size: 12px; font-weight: 900; }
+.google-login-note { margin: 13px 0 0; color: #748188; font-size: 9px; line-height: 1.45; text-align: center; }
 .login-error { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 11px; border-radius: 9px; background: #fae9ec; color: #8f1730; font-size: 9px; }
 .login-error span { width: 19px; height: 19px; display: grid; place-items: center; border-radius: 50%; background: #a01931; color: white; font-weight: 850; }
 .login-card footer { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 17px; border-top: 1px solid #e8ecee; color: #8d989e; font-size: 8px; }
