@@ -199,12 +199,17 @@ test("prepara las carpetas antes de generar y verifica los archivos al final", (
   assert.ok(verifyPosition > batchPosition);
 });
 
-test("muestra únicamente el ecosistema y las automatizaciones de Ingrid", () => {
+test("muestra las tres responsables y asigna la automatización solo a Ingrid", () => {
+  assert.match(indexSource, /data-person="Aisha Tizón" data-has-automations="false"/);
   assert.match(indexSource, /data-person="Ingrid Zarate"/);
+  assert.match(indexSource, /data-person="Profesora Kety Jauregui" data-has-automations="false"/);
+  assert.match(indexSource, /Multitareas/);
+  assert.match(indexSource, /Cursos de actualización/);
+  assert.match(indexSource, /Vicerrectora Académica/);
   assert.match(indexSource, /AUTOMATIZACIONES DE INGRID/);
-  assert.match(indexSource, /automationLaunch\.classList\.remove\('hidden'\)/);
-  assert.doesNotMatch(indexSource, /data-person="Aisha Tizón"/);
-  assert.doesNotMatch(indexSource, /data-person="Profesora Kety Jauregui"/);
+  assert.match(indexSource, /button\.dataset\.hasAutomations === 'true'/);
+  assert.match(indexSource, /Aún no hay automatizaciones disponibles/);
+  assert.match(indexSource, /selectedPerson !== 'Ingrid Zarate'/);
 });
 
 test("impide publicar código fuente como si fuera la interfaz", () => {
