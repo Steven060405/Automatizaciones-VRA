@@ -198,3 +198,11 @@ test("prepara las carpetas antes de generar y verifica los archivos al final", (
   assert.ok(batchPosition > 0);
   assert.ok(verifyPosition > batchPosition);
 });
+
+test("muestra únicamente el ecosistema y las automatizaciones de Ingrid", () => {
+  assert.match(indexSource, /data-person="Ingrid Zarate"/);
+  assert.match(indexSource, /AUTOMATIZACIONES DE INGRID/);
+  assert.match(indexSource, /automationLaunch\.classList\.remove\('hidden'\)/);
+  assert.doesNotMatch(indexSource, /data-person="Aisha Tizón"/);
+  assert.doesNotMatch(indexSource, /data-person="Profesora Kety Jauregui"/);
+});
