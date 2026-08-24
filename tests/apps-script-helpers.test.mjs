@@ -6,7 +6,7 @@ import test from "node:test";
 const source = await readFile(new URL("../google-apps-script/Code.gs", import.meta.url), "utf8");
 const context = vm.createContext({
   console,
-  DocumentApp: { ElementType: { PARAGRAPH: "PARAGRAPH" } },
+  DocumentApp: { ElementType: { PAGE_BREAK: "PAGE_BREAK", PARAGRAPH: "PARAGRAPH" } },
 });
 vm.runInContext(source, context);
 
@@ -45,4 +45,43 @@ test("completa nombre y DNI del asesor en su párrafo", () => {
     output,
     "Asesorados por el profesor: Estuardo Victor Lu Chang Say\t\tDNI: 09303769",
   );
+});
+
+test("inserta una sola separación antes de observaciones", () => {
+  const before = {
+    getType: () => "PARAGRAPH",
+    asParagraph() { return this; },
+    getNumChildren: () => 0,
+  };
+  const observation = {
+    getType: () => "PARAGRAPH",
+    asParagraph() { return this; },
+    getNumChildren: () => 1,
+    getChild: () => ({ getType: () => "TEXT" }),
+  };
+  const textElement = {
+    getType: () => "TEXT",
+    getParent: () => observation,
+  };
+  const children = [before, observation];
+  let insertions = 0;
+  const body = {
+    findText: () => ({ getElement: () => textElement }),
+    getChildIndex: (child) => children.indexOf(child),
+    getChild: (index) => children[index],
+    insertPageBreak: (index) => {
+      insertions += 1;
+      children.splice(index, 0, {
+        getType: () => "PARAGRAPH",
+        asParagraph() { return this; },
+        getNumChildren: () => 1,
+        getChild: () => ({ getType: () => "PAGE_BREAK" }),
+      });
+    },
+  };
+
+  context.placeObservationsOnSecondPage_(body);
+  context.placeObservationsOnSecondPage_(body);
+
+  assert.equal(insertions, 1);
 });

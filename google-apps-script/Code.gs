@@ -197,6 +197,7 @@ function generateAct_(periodFolder, group) {
     });
     fillAdvisor_(body, group.advisor || {});
     trimMemberTable_(body, (group.members || []).length);
+    placeObservationsOnSecondPage_(body);
     const header = document.getHeader();
     if (header) header.replaceText(escapeRegex_("@@ACTA@@"), clean_(group.actNumber));
     document.saveAndClose();
@@ -277,6 +278,34 @@ function trimMemberTable_(body, memberCount) {
   while (memberTable.getNumRows() > requiredRows) {
     memberTable.removeRow(memberTable.getNumRows() - 1);
   }
+}
+
+function placeObservationsOnSecondPage_(body) {
+  const match = body.findText("SIN OBSERVACIONES / RECOMENDACIONES");
+  if (!match) throw new Error("La plantilla no contiene la sección de observaciones.");
+
+  let element = match.getElement();
+  while (element && element.getType() !== DocumentApp.ElementType.PARAGRAPH) {
+    element = element.getParent();
+  }
+  if (!element) throw new Error("No se pudo ubicar el inicio de la sección de observaciones.");
+
+  const paragraph = element.asParagraph();
+  const paragraphIndex = body.getChildIndex(paragraph);
+  const previous = paragraphIndex > 0 ? body.getChild(paragraphIndex - 1) : null;
+  const alreadySeparated = paragraphHasPageBreak_(paragraph) || (
+    previous &&
+    previous.getType() === DocumentApp.ElementType.PARAGRAPH &&
+    paragraphHasPageBreak_(previous.asParagraph())
+  );
+  if (!alreadySeparated) body.insertPageBreak(paragraphIndex);
+}
+
+function paragraphHasPageBreak_(paragraph) {
+  for (let index = 0; index < paragraph.getNumChildren(); index += 1) {
+    if (paragraph.getChild(index).getType() === DocumentApp.ElementType.PAGE_BREAK) return true;
+  }
+  return false;
 }
 
 function upsertFile_(folder, name, blob) {
