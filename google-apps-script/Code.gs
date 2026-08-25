@@ -6,6 +6,8 @@ const GOOGLE_SHEETS_MIME = "application/vnd.google-apps.spreadsheet";
 const AUTHORIZED_EMAILS = [
   "sespinoza@esan.edu.pe",
   "gespinozar822@gmail.com",
+  "izarate@esan.edu.pe",
+  "cursos_actualizacion@ue.edu.pe",
 ];
 
 const MONTHS = {

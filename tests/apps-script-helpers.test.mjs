@@ -224,9 +224,11 @@ test("impide publicar código fuente como si fuera la interfaz", () => {
   assert.match(source, /data-person="Ingrid Zarate"/);
 });
 
-test("permite únicamente los dos correos autorizados", () => {
+test("permite únicamente los correos autorizados", () => {
   assert.equal(context.isAuthorizedEmail_("sespinoza@esan.edu.pe"), true);
   assert.equal(context.isAuthorizedEmail_("GESPINOZAR822@GMAIL.COM"), true);
+  assert.equal(context.isAuthorizedEmail_("izarate@esan.edu.pe"), true);
+  assert.equal(context.isAuthorizedEmail_("cursos_actualizacion@ue.edu.pe"), true);
   assert.equal(context.isAuthorizedEmail_("otro@esan.edu.pe"), false);
   assert.match(source, /const AUTHORIZED_EMAILS = \[/);
   assert.match(source, /Acceso no autorizado/);
