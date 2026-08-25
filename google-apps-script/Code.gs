@@ -8,6 +8,9 @@ const AUTHORIZED_EMAILS = [
   "gespinozar822@gmail.com",
   "izarate@esan.edu.pe",
   "cursos_actualizacion@ue.edu.pe",
+  "atizon@esan.edu.pe",
+  "kjauregui@esan.edu.pe",
+  "srivadeneyra@esan.edu.pe",
 ];
 
 const MONTHS = {
