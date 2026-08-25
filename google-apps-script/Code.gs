@@ -3,6 +3,12 @@ const TEMPLATE_ID = "1pKUqz_VZ2avh5X-5FSFMUiEKfD87Y8DXCM19du0uIEQ";
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const GOOGLE_SHEETS_MIME = "application/vnd.google-apps.spreadsheet";
+const GOOGLE_DOCS_MIME = "application/vnd.google-apps.document";
+const AISHA_SIGNATURE_FILE_ID_PROPERTY = "AISHA_SIGNATURE_FILE_ID";
+const SIGNATURE_ANCHOR = "KETYJAUREGUIPHD";
+const SIGNED_FOLDER_NAME = "FIRMADOS";
+const SIGNATURE_WIDTH_PX = 182;
+const SIGNATURE_HEIGHT_PX = 69;
 const AUTHORIZED_EMAILS = [
   "sespinoza@esan.edu.pe",
   "gespinozar822@gmail.com",
@@ -182,6 +188,199 @@ function verifyGeneration(period, expectedFiles) {
   }
   console.log("Generación verificada: " + period + " · " + expectedFiles.length + " actas");
   return { periodUrl: periodFolder.getUrl(), verifiedCount: expectedFiles.length };
+}
+
+function prepareSignatureBatch(folderUrl) {
+  requireAuthorizedUser_();
+  const sourceFolder = driveFolderFromInput_(folderUrl);
+  getAishaSignatureBlob_();
+  const signedFolder = getOrCreateFolder_(sourceFolder, SIGNED_FOLDER_NAME);
+  const files = listWordFiles_(sourceFolder);
+  if (!files.length) {
+    throw new Error("La carpeta compartida no contiene documentos Word (.docx) en su nivel principal.");
+  }
+
+  return {
+    folderId: sourceFolder.getId(),
+    folderName: sourceFolder.getName(),
+    folderUrl: sourceFolder.getUrl(),
+    outputUrl: signedFolder.getUrl(),
+    files: files.map(function(file) {
+      return { id: file.getId(), name: file.getName(), pdfName: signedPdfName_(file.getName()) };
+    }),
+  };
+}
+
+function signDocumentBatch(folderId, fileIds) {
+  requireAuthorizedUser_();
+  const cleanFolderId = cleanDriveId_(folderId);
+  if (!Array.isArray(fileIds) || !fileIds.length || fileIds.length > 3) {
+    throw new Error("El lote de documentos para firma no tiene el formato esperado.");
+  }
+
+  const sourceFolder = DriveApp.getFolderById(cleanFolderId);
+  const signedFolder = getOrCreateFolder_(sourceFolder, SIGNED_FOLDER_NAME);
+  const signatureBlob = getAishaSignatureBlob_();
+  const results = fileIds.map(function(fileId) {
+    const sourceFile = DriveApp.getFileById(cleanDriveId_(fileId));
+    if (!fileBelongsToFolder_(sourceFile, cleanFolderId)) {
+      throw new Error("El documento " + sourceFile.getName() + " no pertenece directamente a la carpeta seleccionada.");
+    }
+    if (sourceFile.getMimeType() !== DOCX_MIME) {
+      throw new Error(sourceFile.getName() + " no es un documento Word .docx.");
+    }
+    return signWordDocument_(signedFolder, sourceFile, signatureBlob);
+  });
+
+  return { outputUrl: signedFolder.getUrl(), results: results };
+}
+
+function verifySignedDocuments(folderId, expectedPdfNames) {
+  requireAuthorizedUser_();
+  const sourceFolder = DriveApp.getFolderById(cleanDriveId_(folderId));
+  const signedFolder = findFolder_(sourceFolder, SIGNED_FOLDER_NAME);
+  if (!signedFolder) throw new Error("Drive no confirmó la carpeta " + SIGNED_FOLDER_NAME + ".");
+  if (!Array.isArray(expectedPdfNames) || !expectedPdfNames.length) {
+    throw new Error("No se recibieron archivos firmados para verificar.");
+  }
+
+  const missing = expectedPdfNames.filter(function(name) {
+    return !signedFolder.getFilesByName(safeFilePart_(name)).hasNext();
+  });
+  if (missing.length) {
+    throw new Error("Drive no confirmó todos los PDF firmados. Faltan: " + missing.slice(0, 4).join("; ") + (missing.length > 4 ? "; …" : ""));
+  }
+  return { outputUrl: signedFolder.getUrl(), verifiedCount: expectedPdfNames.length };
+}
+
+function driveFolderFromInput_(value) {
+  const folderId = extractDriveFolderId_(value);
+  try {
+    return DriveApp.getFolderById(folderId);
+  } catch (error) {
+    throw new Error("No se pudo abrir la carpeta compartida. Verifica el enlace y el permiso de Editor.");
+  }
+}
+
+function extractDriveFolderId_(value) {
+  const input = clean_(value);
+  const urlMatch = input.match(/\/folders\/([A-Za-z0-9_-]+)/);
+  const rawId = /^[A-Za-z0-9_-]{10,}$/.test(input) ? input : "";
+  const folderId = urlMatch ? urlMatch[1] : rawId;
+  if (!folderId) {
+    throw new Error("Pega un enlace válido de una carpeta de Google Drive.");
+  }
+  return folderId;
+}
+
+function cleanDriveId_(value) {
+  const id = clean_(value);
+  if (!/^[A-Za-z0-9_-]{10,}$/.test(id)) throw new Error("El identificador de Drive no es válido.");
+  return id;
+}
+
+function listWordFiles_(folder) {
+  const iterator = folder.getFiles();
+  const files = [];
+  while (iterator.hasNext()) {
+    const file = iterator.next();
+    if (file.getMimeType() === DOCX_MIME && !/^\.?TEMP FIRMA /i.test(file.getName())) files.push(file);
+  }
+  files.sort(function(left, right) { return left.getName().localeCompare(right.getName()); });
+  return files;
+}
+
+function signedPdfName_(wordName) {
+  const cleanName = safeFilePart_(wordName);
+  return /\.docx$/i.test(cleanName) ? cleanName.replace(/\.docx$/i, ".pdf") : cleanName + ".pdf";
+}
+
+function fileBelongsToFolder_(file, folderId) {
+  const parents = file.getParents();
+  while (parents.hasNext()) {
+    if (parents.next().getId() === folderId) return true;
+  }
+  return false;
+}
+
+function getAishaSignatureBlob_() {
+  const fileId = clean_(PropertiesService.getScriptProperties().getProperty(AISHA_SIGNATURE_FILE_ID_PROPERTY));
+  if (!fileId) {
+    throw new Error("La firma de Aisha todavía no está configurada. Solicita al administrador completar la configuración protegida.");
+  }
+  try {
+    const file = DriveApp.getFileById(cleanDriveId_(fileId));
+    const blob = file.getBlob();
+    if (!/^image\/(png|jpeg)$/i.test(blob.getContentType())) {
+      throw new Error("La firma configurada debe ser una imagen PNG o JPG.");
+    }
+    return blob;
+  } catch (error) {
+    if (/debe ser una imagen/.test(String(error && error.message))) throw error;
+    throw new Error("No se pudo leer la firma protegida de Aisha. Revisa el archivo configurado en Drive.");
+  }
+}
+
+function signWordDocument_(signedFolder, sourceFile, signatureBlob) {
+  const pdfName = signedPdfName_(sourceFile.getName());
+  let temporaryDoc;
+  try {
+    temporaryDoc = Drive.Files.create({
+      name: ".TEMP FIRMA " + new Date().getTime() + " " + sourceFile.getName(),
+      mimeType: GOOGLE_DOCS_MIME,
+    }, sourceFile.getBlob(), { fields: "id", supportsAllDrives: true });
+
+    const document = DocumentApp.openById(temporaryDoc.id);
+    const inserted = insertSignatureAboveSigner_(document, signatureBlob);
+    if (!inserted) {
+      throw new Error(sourceFile.getName() + " no contiene la línea de firma de Kety Jáuregui, Ph.D.");
+    }
+    document.saveAndClose();
+    const pdfFile = upsertFile_(signedFolder, pdfName, exportBlob_(temporaryDoc.id, MimeType.PDF, pdfName));
+    return { sourceName: sourceFile.getName(), pdfName: pdfName, pdfUrl: pdfFile.getUrl(), signatures: inserted };
+  } finally {
+    if (temporaryDoc && temporaryDoc.id) DriveApp.getFileById(temporaryDoc.id).setTrashed(true);
+  }
+}
+
+function insertSignatureAboveSigner_(document, signatureBlob) {
+  const sections = [document.getBody(), document.getHeader(), document.getFooter()].filter(function(section) { return Boolean(section); });
+  for (let index = 0; index < sections.length; index += 1) {
+    const paragraph = findSignerParagraph_(sections[index]);
+    if (!paragraph) continue;
+    const parent = paragraph.getParent();
+    if (!parent || typeof parent.insertParagraph !== "function") {
+      throw new Error("No se pudo insertar la firma encima del nombre de Kety Jáuregui.");
+    }
+
+    const signerIndex = parent.getChildIndex(paragraph);
+    const previous = signerIndex > 0 ? parent.getChild(signerIndex - 1) : null;
+    const reusableBlank = previous &&
+      (previous.getType() === DocumentApp.ElementType.PARAGRAPH || previous.getType() === DocumentApp.ElementType.LIST_ITEM) &&
+      !clean_(previous.getText());
+    const signatureParagraph = reusableBlank ? previous : parent.insertParagraph(signerIndex, "");
+    signatureParagraph.clear();
+    signatureParagraph.setAttributes(paragraph.getAttributes());
+    signatureParagraph.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+    signatureParagraph.setSpacingBefore(0).setSpacingAfter(0);
+    const image = signatureParagraph.appendInlineImage(signatureBlob.copyBlob());
+    image.setWidth(SIGNATURE_WIDTH_PX).setHeight(SIGNATURE_HEIGHT_PX);
+    return 1;
+  }
+  return 0;
+}
+
+function findSignerParagraph_(section) {
+  let match = section.findText("Kety J");
+  while (match) {
+    let paragraph = match.getElement();
+    while (paragraph && paragraph.getType() !== DocumentApp.ElementType.PARAGRAPH && paragraph.getType() !== DocumentApp.ElementType.LIST_ITEM) {
+      paragraph = paragraph.getParent();
+    }
+    if (paragraph && normalize_(paragraph.getText()).indexOf(SIGNATURE_ANCHOR) >= 0) return paragraph;
+    match = section.findText("Kety J", match);
+  }
+  return null;
 }
 
 function activeUserEmail_() {

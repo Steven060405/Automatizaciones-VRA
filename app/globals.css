@@ -16,6 +16,12 @@
 body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-geist-sans), Arial, sans-serif; }
 button { font: inherit; }
 
+.local-preview-shell { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; background: #efe8ea; }
+.local-preview-banner { min-height: 42px; padding: 9px 18px; display: flex; align-items: center; justify-content: center; gap: 9px; background: #7a1730; color: white; font-size: 11px; }
+.local-preview-banner strong { padding: 4px 7px; border-radius: 999px; background: rgba(255,255,255,.15); font-size: 9px; letter-spacing: .7px; text-transform: uppercase; }
+.local-preview-banner span { color: #f4dfe5; }
+.local-preview-frame { width: 100%; height: 100%; min-height: calc(100vh - 42px); border: 0; background: #f8f4f5; }
+
 .app-shell { min-height: 100vh; display: grid; grid-template-columns: 250px 1fr; }
 .sidebar { background: var(--nav); color: white; padding: 28px 18px 22px; display: flex; flex-direction: column; min-height: 100vh; }
 .brand { display: flex; align-items: center; gap: 12px; padding: 0 10px 28px; border-bottom: 1px solid rgba(255,255,255,.1); }

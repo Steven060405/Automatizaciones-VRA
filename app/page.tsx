@@ -1,8 +1,27 @@
+import { headers } from "next/headers";
+import appsScriptPreview from "../google-apps-script/Index.html?raw";
+
 const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbzQONmvj7lrNt7ZLvWVg5yYXlS6pjEBUHFkJY-5UdJfsWfzuMM-6vN5zvulB0zv2tAoEg/exec";
 
 export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default async function Home() {
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "";
+  const isLocalPreview = host.startsWith("localhost") || host.startsWith("127.0.0.1");
+
+  if (isLocalPreview) {
+    return (
+      <main className="local-preview-shell">
+        <div className="local-preview-banner">
+          <strong>Vista local</strong>
+          <span>Los cambios se muestran aquí sin publicarse ni modificar Google Drive.</span>
+        </div>
+        <iframe className="local-preview-frame" title="Vista local de Automatizaciones del VRA" srcDoc={appsScriptPreview} />
+      </main>
+    );
+  }
+
   return (
     <main className="login-page">
       <div className="login-glow login-glow-one" aria-hidden="true" />

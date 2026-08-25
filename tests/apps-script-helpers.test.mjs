@@ -199,17 +199,40 @@ test("prepara las carpetas antes de generar y verifica los archivos al final", (
   assert.ok(verifyPosition > batchPosition);
 });
 
-test("muestra las tres responsables y asigna la automatización solo a Ingrid", () => {
-  assert.match(indexSource, /data-person="Aisha Tizón" data-has-automations="false"/);
-  assert.match(indexSource, /data-person="Ingrid Zarate"/);
+test("muestra las tres responsables y separa las automatizaciones de Aisha e Ingrid", () => {
+  assert.match(indexSource, /data-person="Aisha Tizón" data-has-automations="true"/);
+  assert.match(indexSource, /data-person="Ingrid Zarate" data-has-automations="true"/);
   assert.match(indexSource, /data-person="Profesora Kety Jauregui" data-has-automations="false"/);
   assert.match(indexSource, /Multitareas/);
   assert.match(indexSource, /Cursos de actualización/);
   assert.match(indexSource, /Vicerrectora Académica/);
-  assert.match(indexSource, /AUTOMATIZACIONES DE INGRID/);
+  assert.match(indexSource, /Firma de capacitaciones/);
+  assert.match(indexSource, /id="aishaAutomations"/);
+  assert.match(indexSource, /id="ingridAutomations"/);
   assert.match(indexSource, /button\.dataset\.hasAutomations === 'true'/);
   assert.match(indexSource, /Aún no hay automatizaciones disponibles/);
   assert.match(indexSource, /selectedPerson !== 'Ingrid Zarate'/);
+  assert.match(indexSource, /selectedPerson !== 'Aisha Tizón'/);
+});
+
+test("ubica la firma sobre Kety Jáuregui sin modificar los Word originales", () => {
+  assert.equal(context.extractDriveFolderId_("https://drive.google.com/drive/folders/1LFwml0T6jwio2R0HVILBQ-GxSl1R-VqB?usp=sharing"), "1LFwml0T6jwio2R0HVILBQ-GxSl1R-VqB");
+  assert.equal(context.extractDriveFolderId_("https://drive.google.com/drive/folders/1bo3ZG5V_UVSCSq_dMXAQrt27lRsKVVqj?usp=drive_link"), "1bo3ZG5V_UVSCSq_dMXAQrt27lRsKVVqj");
+  assert.equal(context.signedPdfName_("Resolución final.docx"), "Resolución final.pdf");
+  assert.equal(context.signedPdfName_("DOCUMENTO.DOCX"), "DOCUMENTO.pdf");
+  assert.match(source, /const SIGNATURE_ANCHOR = "KETYJAUREGUIPHD"/);
+  assert.match(source, /const SIGNED_FOLDER_NAME = "FIRMADOS"/);
+  assert.match(source, /signatureParagraph\.appendInlineImage\(signatureBlob\.copyBlob\(\)\)/);
+  assert.match(source, /AISHA_SIGNATURE_FILE_ID_PROPERTY/);
+  assert.match(source, /insertSignatureAboveSigner_/);
+  assert.match(source, /temporaryDoc\.id\)\.setTrashed\(true\)/);
+  assert.doesNotMatch(source, /parents: \[sourceFolder\.getId\(\)\]/);
+  assert.match(indexSource, /Los Word originales se conservan/);
+  assert.match(indexSource, /Los PDF tienen el mismo nombre/);
+  assert.match(indexSource, /No es necesario editar ni marcar los Word/);
+  assert.match(indexSource, /function isDriveFolderUrl\(value\)/);
+  assert.match(indexSource, /url\.pathname/);
+  assert.doesNotMatch(indexSource, /@@FIRMA@@/);
 });
 
 test("mantiene fija la ubicación principal de los archivos en Drive", () => {
@@ -238,7 +261,7 @@ test("permite únicamente los correos autorizados", () => {
 });
 
 test("protege todas las operaciones públicas de generación", () => {
-  for (const functionName of ["getUserEmail", "analyzeWorkbook", "preparePeriod", "prepareGeneration", "generateBatch", "verifyGeneration"]) {
+  for (const functionName of ["getUserEmail", "analyzeWorkbook", "preparePeriod", "prepareGeneration", "generateBatch", "verifyGeneration", "prepareSignatureBatch", "signDocumentBatch", "verifySignedDocuments"]) {
     const guardedFunction = new RegExp(`function ${functionName}\\([^)]*\\) \\{\\s*(?:return )?requireAuthorizedUser_\\(\\);`);
     assert.match(source, guardedFunction);
   }
