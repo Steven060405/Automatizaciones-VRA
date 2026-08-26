@@ -4,6 +4,7 @@ const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingm
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const GOOGLE_SHEETS_MIME = "application/vnd.google-apps.spreadsheet";
 const GOOGLE_DOCS_MIME = "application/vnd.google-apps.document";
+const AISHA_SIGNATURE_BASE64_PROPERTY = "AISHA_SIGNATURE_BASE64";
 const AISHA_SIGNATURE_FILE_ID_PROPERTY = "AISHA_SIGNATURE_FILE_ID";
 const SIGNATURE_ANCHOR = "KETYJAUREGUIPHD";
 const SIGNED_FOLDER_NAME = "FIRMADOS";
@@ -304,7 +305,19 @@ function fileBelongsToFolder_(file, folderId) {
 }
 
 function getAishaSignatureBlob_() {
-  const fileId = clean_(PropertiesService.getScriptProperties().getProperty(AISHA_SIGNATURE_FILE_ID_PROPERTY));
+  const properties = PropertiesService.getScriptProperties();
+  const internalBase64 = clean_(properties.getProperty(AISHA_SIGNATURE_BASE64_PROPERTY));
+  if (internalBase64) {
+    try {
+      const bytes = Utilities.base64Decode(internalBase64);
+      if (!bytes || !bytes.length) throw new Error("La firma interna está vacía.");
+      return Utilities.newBlob(bytes, "image/png", "Firma_Aisha_Tizon.png");
+    } catch (error) {
+      throw new Error("No se pudo leer la firma interna protegida de Aisha. Solicita al administrador volver a configurarla.");
+    }
+  }
+
+  const fileId = clean_(properties.getProperty(AISHA_SIGNATURE_FILE_ID_PROPERTY));
   if (!fileId) {
     throw new Error("La firma de Aisha todavía no está configurada. Solicita al administrador completar la configuración protegida.");
   }
@@ -361,8 +374,9 @@ function insertSignatureAboveSigner_(document, signatureBlob) {
     const signatureParagraph = reusableBlank ? previous : parent.insertParagraph(signerIndex, "");
     signatureParagraph.clear();
     signatureParagraph.setAttributes(paragraph.getAttributes());
-    signatureParagraph.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
-    signatureParagraph.setSpacingBefore(0).setSpacingAfter(0);
+    signatureParagraph.setAlignment(paragraph.getAlignment() || DocumentApp.HorizontalAlignment.LEFT);
+    signatureParagraph.setSpacingBefore(0).setSpacingAfter(2);
+    signatureParagraph.setLeftIndent(0).setIndentStart(0).setIndentFirstLine(0);
     const image = signatureParagraph.appendInlineImage(signatureBlob.copyBlob());
     image.setWidth(SIGNATURE_WIDTH_PX).setHeight(SIGNATURE_HEIGHT_PX);
     return 1;

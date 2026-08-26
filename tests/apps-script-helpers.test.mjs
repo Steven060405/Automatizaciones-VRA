@@ -223,7 +223,11 @@ test("ubica la firma sobre Kety Jáuregui sin modificar los Word originales", ()
   assert.match(source, /const SIGNATURE_ANCHOR = "KETYJAUREGUIPHD"/);
   assert.match(source, /const SIGNED_FOLDER_NAME = "FIRMADOS"/);
   assert.match(source, /signatureParagraph\.appendInlineImage\(signatureBlob\.copyBlob\(\)\)/);
+  assert.match(source, /signatureParagraph\.setSpacingBefore\(0\)\.setSpacingAfter\(2\)/);
+  assert.match(source, /signatureParagraph\.setAlignment\(paragraph\.getAlignment\(\) \|\| DocumentApp\.HorizontalAlignment\.LEFT\)/);
+  assert.doesNotMatch(source, /signatureParagraph\.setAlignment\(DocumentApp\.HorizontalAlignment\.CENTER\)/);
   assert.match(source, /AISHA_SIGNATURE_FILE_ID_PROPERTY/);
+  assert.match(source, /AISHA_SIGNATURE_BASE64_PROPERTY/);
   assert.match(source, /insertSignatureAboveSigner_/);
   assert.match(source, /temporaryDoc\.id\)\.setTrashed\(true\)/);
   assert.doesNotMatch(source, /parents: \[sourceFolder\.getId\(\)\]/);
@@ -233,6 +237,36 @@ test("ubica la firma sobre Kety Jáuregui sin modificar los Word originales", ()
   assert.match(indexSource, /function isDriveFolderUrl\(value\)/);
   assert.match(indexSource, /url\.pathname/);
   assert.doesNotMatch(indexSource, /@@FIRMA@@/);
+});
+
+test("mantiene la firma disponible para todos los correos autorizados sin compartir el archivo", () => {
+  const expectedBytes = [137, 80, 78, 71];
+  let requestedFile = false;
+  context.PropertiesService = {
+    getScriptProperties: () => ({
+      getProperty: (name) => name === "AISHA_SIGNATURE_BASE64" ? "iVBORw==" : "",
+    }),
+  };
+  context.Utilities = {
+    base64Decode: (value) => {
+      assert.equal(value, "iVBORw==");
+      return expectedBytes;
+    },
+    newBlob: (bytes, contentType, name) => ({ bytes, contentType, name }),
+  };
+  context.DriveApp = {
+    getFileById: () => {
+      requestedFile = true;
+      throw new Error("No debe consultar Drive cuando existe la firma interna");
+    },
+  };
+
+  const blob = context.getAishaSignatureBlob_();
+
+  assert.deepEqual(blob.bytes, expectedBytes);
+  assert.equal(blob.contentType, "image/png");
+  assert.equal(blob.name, "Firma_Aisha_Tizon.png");
+  assert.equal(requestedFile, false);
 });
 
 test("mantiene fija la ubicación principal de los archivos en Drive", () => {
