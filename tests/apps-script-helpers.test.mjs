@@ -223,7 +223,8 @@ test("ubica la firma sobre Kety Jáuregui sin modificar los Word originales", ()
   assert.match(source, /const SIGNATURE_ANCHOR = "KETYJAUREGUIPHD"/);
   assert.match(source, /const SIGNED_FOLDER_NAME = "FIRMADOS"/);
   assert.match(source, /signatureParagraph\.appendInlineImage\(signatureBlob\.copyBlob\(\)\)/);
-  assert.match(source, /signatureParagraph\.setSpacingBefore\(0\)\.setSpacingAfter\(2\)/);
+  assert.match(source, /signatureParagraph\.setKeepWithNext\(true\)/);
+  assert.match(source, /signatureParagraph\.setSpacingBefore\(0\)\.setSpacingAfter\(0\)/);
   assert.match(source, /signatureParagraph\.setAlignment\(paragraph\.getAlignment\(\) \|\| DocumentApp\.HorizontalAlignment\.LEFT\)/);
   assert.doesNotMatch(source, /signatureParagraph\.setAlignment\(DocumentApp\.HorizontalAlignment\.CENTER\)/);
   assert.match(source, /AISHA_SIGNATURE_FILE_ID_PROPERTY/);

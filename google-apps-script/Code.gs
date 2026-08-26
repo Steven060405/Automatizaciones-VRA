@@ -375,8 +375,11 @@ function insertSignatureAboveSigner_(document, signatureBlob) {
     signatureParagraph.clear();
     signatureParagraph.setAttributes(paragraph.getAttributes());
     signatureParagraph.setAlignment(paragraph.getAlignment() || DocumentApp.HorizontalAlignment.LEFT);
-    signatureParagraph.setSpacingBefore(0).setSpacingAfter(2);
+    signatureParagraph.setSpacingBefore(0).setSpacingAfter(0);
+    signatureParagraph.setKeepWithNext(true);
     signatureParagraph.setLeftIndent(0).setIndentStart(0).setIndentFirstLine(0);
+    paragraph.setSpacingBefore(0).setSpacingAfter(0);
+    paragraph.setKeepWithNext(true);
     const image = signatureParagraph.appendInlineImage(signatureBlob.copyBlob());
     image.setWidth(SIGNATURE_WIDTH_PX).setHeight(SIGNATURE_HEIGHT_PX);
     return 1;
